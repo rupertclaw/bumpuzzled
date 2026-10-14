@@ -4,284 +4,790 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Tile Rush</title>
-<meta name="theme-color" content="#0f1020">
+<meta name="theme-color" content="#0e0f24">
 <link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
 <style>
 :root {
- --bg: #0f1020; --panel: #1a1b2e; --tile: #262848; --tile-alt: #2d3060;
- --wall: #3a3d6b; --hole: #0a0a14; --text: #e8e9ff; --dim: #8b8fc7;
- --accent: #ffb84d; --green: #5cde8b;
+  --bg: #0e0f24; --bg2: #1a1c3a; --panel: #1d2045; --line: #2c3068;
+  --top: #4a51a0; --top-hi: #5b63b8; --side: #2a2e66; --side-lo: #14163a;
+  --wall-top: #5d5a6e; --wall-side: #34323f;
+  --text: #eef0ff; --dim: #9196cc; --faint: #5b6099;
+  --gold: #ffcf5a; --gold-lo: #c98f1c;
+  --jump: #59d8ff; --spring: #ff9f43; --lever: #b48cff; --plank: #8c6fc0; --plank-side: #523f7a;
+  --portal-a: #34e3c0; --portal-b: #ff6fae; --exit: #5fe08f; --bad: #ff7b7b;
+  --tilt: 34deg;
 }
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { height: 100%; }
 body {
- background: var(--bg); color: var(--text);
- font-family: system-ui, -apple-system, sans-serif;
- display: flex; flex-direction: column; align-items: center;
- user-select: none; touch-action: manipulation;
- overscroll-behavior: none;
+  background: radial-gradient(120% 70% at 50% 35%, #262a5a 0%, #15173a 45%, var(--bg) 80%);
+  color: var(--text); font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  user-select: none; -webkit-user-select: none; overscroll-behavior: none; overflow: hidden;
 }
-header { padding: 12px 16px 4px; text-align: center; width: 100%; max-width: 560px; }
-h1 { font-size: 1.35rem; letter-spacing: 2px; }
-#levelname { color: var(--accent); font-size: .95rem; margin-top: 2px; font-weight: 600; }
-#board {
- display: grid; gap: 3px; background: var(--panel);
- padding: 10px; border-radius: 14px; margin: 8px 0;
- box-shadow: 0 6px 24px rgba(0,0,0,.45);
-}
-.cell {
- width: var(--cs, 34px); height: var(--cs, 34px);
- border-radius: 7px; display: flex; align-items: center; justify-content: center;
- font-size: calc(var(--cs, 34px) * .52);
- background: var(--tile); color: var(--text);
- transition: transform .08s ease, background .15s ease;
-}
-.cell.floor { background: var(--tile-alt); }
-.cell.wall { background: var(--wall); box-shadow: inset 0 0 0 2px rgba(255,255,255,.04); }
-.cell.hole { background: var(--hole); box-shadow: inset 0 3px 8px #000; }
-.cell.spring::after { content: "⬆"; font-size: .5em; color: #ffd9a0; position: absolute; margin-top: 10px; }
-.cell { position: relative; }
-.cell.jump::after { content: "⤒"; position: absolute; font-size: .55em; color: #a0e8ff; margin-top: 12px; }
-.cell.tele { background: #4634a8; }
-.cell.trigger { background: #7a4d1f; }
-.cell.bridge { background: #6b5a2e; }
-.cell.bridge.open { background: #a58a3a; animation: bridgepop .3s ease; }
-.cell.exit { background: var(--green); color: #0a3320; box-shadow: 0 0 12px rgba(92,222,139,.55); }
-.cell.player {
- background: var(--accent); color: #3d2600; font-weight: 700;
- box-shadow: 0 0 14px rgba(255,184,77,.6); z-index: 2;
- animation: pop .12s ease;
-}
-@keyframes pop { 0% { transform: scale(.82); } 100% { transform: scale(1); } }
-@keyframes bridgepop { 0% { filter: brightness(2); } 100% { filter: none; } }
-#msg { min-height: 1.4em; font-size: .9rem; color: var(--dim); text-align: center; padding: 0 12px; }
-#msg.win { color: var(--green); font-weight: 700; }
-#msg.death { color: #ff7a7a; }
-#controls { display: grid; grid-template-areas: ". up ." "left down right"; gap: 8px; margin: 10px 0 6px; }
-#controls button {
- width: 60px; height: 60px; font-size: 1.35rem;
- background: var(--tile); color: var(--text); border: none; border-radius: 12px;
- box-shadow: 0 3px 0 #12142c;
-}
-#controls button:active { transform: translateY(2px); box-shadow: 0 1px 0 #12142c; }
-#btnup { grid-area: up; } #btndown { grid-area: down; }
-#btnleft { grid-area: left; } #btnright { grid-area: right; }
-#actions { display: flex; gap: 8px; margin: 4px 0 14px; }
-#actions button {
- background: var(--panel); color: var(--dim); border: 1px solid #2e3060;
- padding: 8px 14px; border-radius: 10px; font-size: .9rem;
-}
-#actions button.primary { color: var(--accent); border-color: var(--accent); }
-footer { font-size: .75rem; color: #555a8f; padding-bottom: 12px; }
-#winbox {
- display: none; position: fixed; inset: 0; background: rgba(10,10,25,.86);
- align-items: center; justify-content: center; flex-direction: column; gap: 12px; z-index: 10;
- text-align: center; padding: 20px;
-}
-#winbox.show { display: flex; }
-#winbox h2 { color: var(--green); }
-#winbox p { color: var(--dim); }
-#winbox button {
- background: var(--accent); color: #3d2600; border: none;
- padding: 12px 26px; border-radius: 12px; font-size: 1rem; font-weight: 700;
-}
+button { font: inherit; color: inherit; border: none; background: none; cursor: pointer; }
+.screen { position: fixed; inset: 0; display: none; flex-direction: column; align-items: center;
+  padding: max(10px, env(safe-area-inset-top)) 16px max(12px, env(safe-area-inset-bottom)); }
+.screen.on { display: flex; }
+
+/* ---------- level select ---------- */
+#home { overflow-y: auto; touch-action: pan-y; }
+.logo { margin: 28px 0 4px; font-size: 2.3rem; font-weight: 900; letter-spacing: 4px;
+  background: linear-gradient(180deg, #fff3c4, var(--gold) 55%, var(--gold-lo));
+  -webkit-background-clip: text; background-clip: text; color: transparent; }
+.tag { color: var(--dim); font-size: .95rem; margin-bottom: 22px; text-align: center; }
+#levelgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 100%; max-width: 380px; }
+.lvbtn { aspect-ratio: 1; border-radius: 14px; background: linear-gradient(180deg, #2a2e66, var(--panel));
+  border: 1px solid var(--line); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  font-size: 1.3rem; font-weight: 800; box-shadow: 0 5px 0 #0b0c20; }
+.lvbtn:active { transform: translateY(3px); box-shadow: 0 2px 0 #0b0c20; }
+.lvbtn .st { font-size: .7rem; letter-spacing: 1px; color: var(--gold); }
+.lvbtn .st i { color: var(--faint); font-style: normal; }
+.lvbtn.locked { opacity: .35; }
+.lvbtn.next { border-color: var(--gold); box-shadow: 0 5px 0 #0b0c20, 0 0 14px rgba(255,207,90,.25); }
+.homefoot { margin-top: 22px; display: flex; gap: 10px; }
+.pill { padding: 10px 16px; border-radius: 12px; background: var(--panel); border: 1px solid var(--line);
+  color: var(--dim); font-size: .9rem; }
+.small { margin-top: 16px; color: var(--faint); font-size: .75rem; text-align: center; }
+
+/* ---------- game ---------- */
+#game { touch-action: none; }
+.topbar { width: 100%; max-width: 460px; display: flex; align-items: center; gap: 8px; }
+.iconbtn { width: 42px; height: 42px; border-radius: 12px; background: var(--panel);
+  border: 1px solid var(--line); font-size: 1.1rem; color: var(--dim); flex: none; }
+.title { flex: 1; text-align: center; min-width: 0; }
+#lvname { font-weight: 800; font-size: 1.05rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#lvnum { color: var(--dim); font-size: .78rem; letter-spacing: 1px; }
+#counter { margin-top: 8px; display: flex; gap: 14px; font-size: .85rem; color: var(--dim); }
+#counter b { color: var(--text); font-variant-numeric: tabular-nums; }
+#hint { min-height: 1.3em; margin-top: 4px; color: var(--gold); font-size: .85rem; text-align: center;
+  max-width: 420px; opacity: .9; }
+
+/* The board is a real 3D plane: #stage gives perspective, #scene is tilted
+   away from the viewer, and every tile is a slab with a front face. */
+#stage { flex: 1; width: 100%; position: relative; min-height: 0; perspective: 1100px; perspective-origin: 50% 20%; }
+#scene { position: absolute; left: 50%; top: 50%; transform-style: preserve-3d; }
+.slot, .tile, #token, #shadow { position: absolute; left: 0; top: 0; width: var(--cs); height: var(--cs); }
+.slot { border-radius: calc(var(--cs) * .14); background: rgba(3,3,14,.55);
+  box-shadow: inset 0 0 calc(var(--cs) * .25) #000, 0 0 0 1px rgba(140,150,255,.07); }
+.tile { transform-style: preserve-3d; border-radius: calc(var(--cs) * .12);
+  background: linear-gradient(160deg, var(--top-hi), var(--top));
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.07), inset 0 calc(var(--cs) * .05) 0 rgba(255,255,255,.08); }
+.tile::after { content: ""; position: absolute; left: 0; top: 100%; width: 100%; height: var(--th);
+  transform-origin: top; transform: rotateX(-90deg);
+  background: linear-gradient(180deg, var(--side), var(--side-lo)); border-radius: 0 0 4px 4px; }
+.tile svg { position: absolute; inset: 8%; width: 84%; height: 84%; }
+.tile.w { background:
+    linear-gradient(rgba(0,0,0,.28), rgba(0,0,0,.28)) 0 33%/100% 2px no-repeat,
+    linear-gradient(rgba(0,0,0,.28), rgba(0,0,0,.28)) 0 66%/100% 2px no-repeat,
+    linear-gradient(90deg, transparent 48%, rgba(0,0,0,.28) 48% 52%, transparent 52%) 0 0/100% 33% no-repeat,
+    linear-gradient(90deg, transparent 23%, rgba(0,0,0,.28) 23% 27%, transparent 27% 73%, rgba(0,0,0,.28) 73% 77%, transparent 77%) 0 50%/100% 33% no-repeat,
+    linear-gradient(90deg, transparent 48%, rgba(0,0,0,.28) 48% 52%, transparent 52%) 0 100%/100% 34% no-repeat,
+    linear-gradient(160deg, #78748c, var(--wall-top));
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.08); }
+.tile.w::after { height: var(--wh); background: linear-gradient(180deg, var(--wall-side), #1f1e28); }
+.tile.w::before { content: ""; position: absolute; left: 0; top: 100%; width: 100%; height: var(--wh); z-index: 1;
+  transform-origin: top; transform: rotateX(-90deg) translateZ(.5px);
+  background: repeating-linear-gradient(180deg, transparent 0 calc(var(--wh) / 2 - 1px), rgba(0,0,0,.25) 0 calc(var(--wh) / 2)); }
+.tile.exit { background: radial-gradient(circle, #8af0b0, #3fb872 75%); }
+.tile.exit::after { background: linear-gradient(180deg, #2a8a50, #1b5a35); }
+.tile.portal-a { background: radial-gradient(circle, #1d6a63, var(--top) 80%); }
+.tile.portal-b { background: radial-gradient(circle, #7a2f5a, var(--top) 80%); }
+.tile.lever-t { background: linear-gradient(160deg, #6b5aa8, #4b3f86); }
+.tile.br { background: repeating-linear-gradient(90deg, var(--plank) 0 calc(var(--cs) * .3), #6f56a0 0 calc(var(--cs) * .333));
+  transform-origin: top; transition: transform .38s cubic-bezier(.4,1.4,.6,1); }
+.tile.br::after { background: var(--plank-side); }
+.tile.dropping { animation: drop .6s ease-in forwards; }
+.tile.gone { visibility: hidden; }
+@keyframes drop { 0% { transform: translateZ(var(--th)); opacity: 1; }
+  25% { transform: translateZ(calc(var(--th) - 4px)); opacity: 1; }
+  100% { transform: translateZ(-420px) rotateX(18deg); opacity: 0; } }
+.tile.tapped { outline: 3px solid var(--gold); outline-offset: 1px; }
+.portal svg .swirl { transform-origin: 20px 20px; animation: spin 3s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+/* upright sprites standing on a tile, turned to face the camera */
+.sprite { position: absolute; left: 10%; bottom: 50%; width: 80%; height: 90%; transform-origin: 50% 100%;
+  transform: rotateX(calc(-1 * var(--tilt))) translateZ(1px); pointer-events: none; }
+.sprite svg { position: static; width: 100%; height: 100%; overflow: visible; }
+.star svg { animation: bob 1.8s ease-in-out infinite; filter: drop-shadow(0 0 6px rgba(95,224,143,.8)); }
+@keyframes bob { 50% { transform: translateY(-8%); } }
+.lever-t .stick { transition: transform .25s ease; transform-origin: 20px 34px; transform: rotate(-30deg); }
+.lever-t.on .stick { transform: rotate(30deg); }
+
+#token { transform-origin: 50% 100%; pointer-events: none; }
+#token svg { width: 100%; height: 100%; overflow: visible; }
+#token .eyes { transition: transform .12s ease; }
+#shadow { border-radius: 50%; background: radial-gradient(closest-side, rgba(0,0,0,.55), transparent); pointer-events: none; }
+
+#msg { height: 3.9em; line-height: 1.3; overflow: hidden; display: flex; align-items: center; justify-content: center;
+  text-align: center; font-size: .9rem; color: var(--dim); max-width: 420px; padding: 2px 6px; }
+#msg.bad { color: var(--bad); }
+#msg.info { color: var(--text); }
+
+.controls { display: flex; align-items: center; gap: 18px; margin-top: 4px; }
+.dpad { display: grid; grid-template-columns: repeat(3, 58px); grid-template-rows: repeat(2, 54px); gap: 6px; }
+.dpad button { border-radius: 14px; background: linear-gradient(180deg, #2a2e66, var(--panel)); border: 1px solid var(--line);
+  box-shadow: 0 4px 0 #0b0c20; font-size: 1.3rem; color: var(--text); }
+.dpad button:active, .side button:active { transform: translateY(3px); box-shadow: 0 1px 0 #0b0c20; }
+#bU { grid-column: 2; } #bL { grid-column: 1; grid-row: 2; } #bD { grid-column: 2; grid-row: 2; } #bR { grid-column: 3; grid-row: 2; }
+.side { display: flex; flex-direction: column; gap: 6px; }
+.side button { width: 74px; height: 54px; border-radius: 14px; background: linear-gradient(180deg, #2a2e66, var(--panel));
+  border: 1px solid var(--line); box-shadow: 0 4px 0 #0b0c20; font-size: .78rem; color: var(--dim);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; }
+.side button span { font-size: 1.15rem; color: var(--text); }
+.side button:disabled { opacity: .4; }
+
+/* ---------- cards (flat tile pictures) ---------- */
+.veil { position: fixed; inset: 0; background: rgba(8,9,24,.78); display: none; align-items: center;
+  justify-content: center; padding: 20px; z-index: 20; backdrop-filter: blur(3px); }
+.veil.on { display: flex; }
+.card { width: 100%; max-width: 340px; background: var(--bg2); border: 1px solid var(--line); border-radius: 20px;
+  padding: 22px 20px 18px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,.5); animation: rise .25s ease; }
+@keyframes rise { from { transform: translateY(16px) scale(.97); opacity: 0; } }
+.card h2 { font-size: 1.3rem; margin-bottom: 6px; }
+.card .kicker { color: var(--gold); font-size: .75rem; letter-spacing: 2px; font-weight: 700; margin-bottom: 6px; }
+.card p { color: var(--dim); line-height: 1.45; font-size: .95rem; }
+.card .demo { display: flex; justify-content: center; gap: 5px; margin: 14px 0 16px; }
+.dc { --s: 42px; width: var(--s); height: var(--s); border-radius: 8px; position: relative; flex: none;
+  background: linear-gradient(160deg, var(--top-hi), var(--top)); box-shadow: 0 5px 0 var(--side); }
+.dc svg { position: absolute; inset: 8%; width: 84%; height: 84%; overflow: visible; }
+.dc.w { background: linear-gradient(160deg, #78748c, var(--wall-top)); box-shadow: 0 8px 0 var(--wall-side); transform: translateY(-3px); }
+.dc.h, .dc.gap { background: rgba(3,3,14,.7); box-shadow: inset 0 0 10px #000; }
+.dc.gap { box-shadow: inset 0 0 10px #000, inset 0 -6px 0 var(--plank-side); }
+.dc.br { background: repeating-linear-gradient(90deg, var(--plank) 0 30%, #6f56a0 0 33.3%); box-shadow: 0 5px 0 var(--plank-side); }
+.dc.exit { background: radial-gradient(circle, #8af0b0, #3fb872 75%); box-shadow: 0 5px 0 #1b5a35; }
+.dc.lever-t { background: linear-gradient(160deg, #6b5aa8, #4b3f86); }
+.dc.fell { opacity: .25; border: 1px dashed var(--dim); background: transparent; box-shadow: none; }
+.card .row { display: flex; gap: 8px; justify-content: center; margin-top: 16px; }
+.card .go { background: var(--gold); color: #3a2600; font-weight: 800; padding: 12px 22px; border-radius: 12px; }
+.card .alt { background: var(--panel); border: 1px solid var(--line); color: var(--dim); padding: 12px 16px; border-radius: 12px; }
+.stars { font-size: 2.2rem; letter-spacing: 6px; margin: 4px 0 8px; color: var(--faint); }
+.stars .on { color: var(--gold); text-shadow: 0 0 12px rgba(255,207,90,.5); display: inline-block; animation: starpop .4s ease backwards; }
+@keyframes starpop { from { transform: scale(0) rotate(-40deg); } }
+.legend { text-align: left; display: flex; flex-direction: column; gap: 12px; margin-top: 10px; max-height: 58vh; overflow-y: auto; padding: 4px 2px 8px; }
+.legend .item { display: flex; gap: 12px; align-items: center; }
+.legend .item .dc { --s: 34px; }
+.legend .item div:last-child { font-size: .86rem; color: var(--dim); line-height: 1.35; }
+.legend .item b { color: var(--text); }
 </style>
 </head>
 <body>
-<header>
- <h1>TILE RUSH</h1>
- <div id="levelname"></div>
-</header>
-<div id="board"></div>
-<div id="msg"></div>
-<div id="controls">
- <button id="btnup">↑</button>
- <button id="btnleft">←</button>
- <button id="btndown">↓</button>
- <button id="btnright">→</button>
-</div>
-<div id="actions">
- <button id="btnundo">↩ Undo</button>
- <button id="btnreset">⟲ Restart</button>
- <button id="btnskip" class="primary">Skip →</button>
-</div>
-<footer>+D-Pad or arrow keys / WASD &middot; offline-ready</footer>
-<div id="winbox">
- <h2>LEVEL CLEAR</h2>
- <p id="winstats"></p>
- <button id="btnnext">Next Level →</button>
-</div>
+
+<section id="home" class="screen">
+  <div class="logo">TILE RUSH</div>
+  <div class="tag">Every step is one-way. Think first.</div>
+  <div id="levelgrid"></div>
+  <div class="homefoot">
+    <button class="pill" id="howbtn">How to play</button>
+    <button class="pill" id="soundbtn"></button>
+  </div>
+  <div class="small">Works offline · progress saved on this device</div>
+</section>
+
+<section id="game" class="screen">
+  <div class="topbar">
+    <button class="iconbtn" id="backbtn" aria-label="Levels">☰</button>
+    <div class="title"><div id="lvnum"></div><div id="lvname"></div></div>
+    <button class="iconbtn" id="helpbtn" aria-label="What do the tiles do?">?</button>
+  </div>
+  <div id="counter">Moves <b id="moves">0</b> · Par <b id="par">0</b></div>
+  <div id="hint"></div>
+  <div id="stage"><div id="scene"></div></div>
+  <div id="msg"></div>
+  <div class="controls">
+    <div class="dpad">
+      <button id="bU" aria-label="Up">▲</button>
+      <button id="bL" aria-label="Left">◀</button>
+      <button id="bD" aria-label="Down">▼</button>
+      <button id="bR" aria-label="Right">▶</button>
+    </div>
+    <div class="side">
+      <button id="undobtn"><span>↶</span>Undo</button>
+      <button id="resetbtn"><span>⟲</span>Restart</button>
+    </div>
+  </div>
+</section>
+
+<div class="veil" id="veil"><div class="card" id="card"></div></div>
+
 <script src="game-core.js"></script>
+<script src="levels.js"></script>
 <script>
-const boardEl = document.getElementById("board");
-const msgEl = document.getElementById("msg");
-const levelNameEl = document.getElementById("levelname");
-const winbox = document.getElementById("winbox");
-const winstats = document.getElementById("winstats");
+"use strict";
+const $ = id => document.getElementById(id);
 
-let li = 0, grid, pos, bridgesOpen, history, moves, done = false;
+// ------------------------------------------------------------ tile art
+const ICON = {
+  jump: `<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="13" fill="rgba(0,0,0,.18)" stroke="var(--jump)" stroke-width="2.4" stroke-opacity=".6"/>
+    <g fill="none" stroke="var(--jump)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M13 21l7-7 7 7"/><path d="M13 28l7-7 7 7" opacity=".6"/></g></svg>`,
+  spring: `<svg viewBox="0 0 40 40"><rect x="9" y="9" width="22" height="22" rx="4" fill="rgba(0,0,0,.2)"/>
+    <g fill="none" stroke="var(--spring)" stroke-width="3" stroke-linecap="round">
+    <path d="M11 31h18"/><path d="M13 27l14-3.5M13 22.5l14-3.5M13 18l14-3.5"/><path d="M11 10h18"/></g></svg>`,
+  stick: `<svg viewBox="0 0 40 40"><rect x="10" y="32" width="20" height="6" rx="3" fill="#2a2450"/>
+    <g class="stick"><rect x="18.5" y="10" width="3" height="24" rx="1.5" fill="#e8e8f0"/>
+    <circle cx="20" cy="10" r="5.5" fill="var(--lever)" stroke="#fff" stroke-opacity=".5"/></g></svg>`,
+  lever: `<svg viewBox="0 0 40 40"><rect x="9" y="27" width="22" height="7" rx="3" fill="#2a2450"/>
+    <g class="stick"><rect x="18.5" y="9" width="3" height="20" rx="1.5" fill="#ddd"/>
+    <circle cx="20" cy="9" r="5" fill="var(--lever)"/></g></svg>`,
+  portal: col => `<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="14" fill="${col}" opacity=".25"/>
+    <g class="swirl" fill="none" stroke="${col}" stroke-width="2.8" stroke-linecap="round">
+    <path d="M20 7a13 13 0 0 1 13 13"/><path d="M20 33a13 13 0 0 1-13-13"/>
+    <path d="M20 12.5a7.5 7.5 0 0 1 7.5 7.5"/><path d="M20 27.5a7.5 7.5 0 0 1-7.5-7.5"/></g></svg>`,
+  star: `<svg viewBox="0 0 40 40"><path d="M20 4l4.6 9.6 10.4 1.4-7.6 7.2 2 10.4L20 27.6l-9.4 5 2-10.4L5 15l10.4-1.4z"
+    fill="#7cf5a8" stroke="#1f7a45" stroke-width="1.6" stroke-linejoin="round"/></svg>`,
+};
+const PLAYER_SVG = `<svg viewBox="0 0 40 40"><defs><radialGradient id="pg" cx=".35" cy=".3" r=".8">
+  <stop offset="0" stop-color="#fff1b8"/><stop offset=".5" stop-color="var(--gold)"/><stop offset="1" stop-color="var(--gold-lo)"/>
+  </radialGradient></defs><circle cx="20" cy="22" r="16" fill="url(#pg)"/>
+  <g class="eyes"><ellipse cx="14.5" cy="20" rx="2.7" ry="3.6" fill="#2a1a00"/><ellipse cx="25.5" cy="20" rx="2.7" ry="3.6" fill="#2a1a00"/>
+  <circle cx="15.3" cy="18.7" r=".95" fill="#fff"/><circle cx="26.3" cy="18.7" r=".95" fill="#fff"/></g></svg>`;
 
-const progress = JSON.parse(localStorage.getItem("tilerush") || "{}");
+// What each tile is called and what it does — used by the intro cards,
+// the ? legend, and tapping a tile on the board.
+const INFO = {
+  ".": ["Tile", "Walk on it — but once you step off, it falls away."],
+  "#": ["Wall", "Solid. Nothing gets through — not even a spring launch."],
+  "H": ["Hole", "Step in and you fall. No harm done: you pop straight back."],
+  "E": ["Exit", "Reach the star to clear the level."],
+  "J": ["Jump pad", "Stand on it and push toward a gap: you leap over that one gap. Two in a row is too far."],
+  "S": ["Spring", "Stand on it and push any way: you fly over every gap in that direction and land on the first tile still standing. A wall in the way stops the launch."],
+  "T": ["Lever", "Land on it to swing every bridge: bridges across a gap swing down, hanging ones swing across."],
+  "B": ["Bridge", "Swung across: walk over it. Hanging down: it's a gap, just like a hole. A lever swings every bridge at once."],
+  "1": ["Portal", "Step on one and you pop out of its twin (same colour). The pair works once."],
+};
+const KIND = ch => ch === "P" ? "." : ch === "b" ? "B" : "234".includes(ch) ? "1" : ch;
+// Order tiles are introduced in, and which get an intro card
+const INTRO_ORDER = ["H", "J", "S", "T", "1"];
 
-function saveProgress() { localStorage.setItem("tilerush", JSON.stringify(progress)); }
-
-function loadLevel(i) {
- li = Math.min(i, LEVELS.length - 1);
- grid = LEVELS[li].grid.map(r => r.split(""));
- pos = null;
- for (let r = 0; r < grid.length; r++)
-  for (let c = 0; c < grid[r].length; c++)
-   if (grid[r][c] === "P") pos = { r, c };
- bridgesOpen = false;
- history = []; moves = 0; done = false;
- winbox.classList.remove("show");
- msgEl.textContent = ""; msgEl.className = "";
- levelNameEl.textContent = `Level ${li + 1} / ${LEVELS.length} — ${LEVELS[li].name}`;
- resizeBoard();
- render();
+// Flat little tile pictures for the cards and legend
+function demoCell(ch, extra) {
+  const cls = { "#": "w", "H": "h", "B": "br", "b": "br", "E": "exit", "T": "lever-t" }[ch] || "";
+  const svg = { J: ICON.jump, S: ICON.spring, T: ICON.lever, E: ICON.star,
+    "1": ICON.portal("var(--portal-a)"), "2": ICON.portal("var(--portal-a)") }[ch] || "";
+  return `<div class="dc ${cls} ${extra || ""}">${svg}</div>`;
 }
 
-function resizeBoard() {
- const maxW = Math.min(innerWidth - 44, 420);
- const rows = grid.length, cols = grid[0].length;
- const cs = Math.floor(Math.min(maxW / cols, 46, (innerHeight * .42) / rows));
- boardEl.style.setProperty("--cs", Math.max(cs, 20) + "px");
- boardEl.style.gridTemplateColumns = `repeat(${cols}, var(--cs))`;
+// ------------------------------------------------------------ sound
+let actx = null;
+function audio() {
+  if (!save.sound) return null;
+  try {
+    if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+    if (actx.state === "suspended") actx.resume();
+  } catch (e) { return null; }
+  return actx;
+}
+function tone(f1, f2, dur, type, vol, delay) {
+  const a = audio(); if (!a) return;
+  const t = a.currentTime + (delay || 0);
+  const o = a.createOscillator(), g = a.createGain();
+  o.type = type || "sine";
+  o.frequency.setValueAtTime(f1, t);
+  o.frequency.exponentialRampToValueAtTime(f2, t + dur);
+  g.gain.setValueAtTime(vol || .12, t);
+  g.gain.exponentialRampToValueAtTime(.001, t + dur);
+  o.connect(g).connect(a.destination);
+  o.start(t); o.stop(t + dur + .02);
+}
+function noise(dur, vol, delay) {
+  const a = audio(); if (!a) return;
+  const buf = a.createBuffer(1, Math.floor(a.sampleRate * dur), a.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / d.length);
+  const s = a.createBufferSource(), g = a.createGain(), f = a.createBiquadFilter();
+  f.type = "lowpass"; f.frequency.value = 900;
+  s.buffer = buf; g.gain.value = vol || .15;
+  s.connect(f).connect(g).connect(a.destination); s.start(a.currentTime + (delay || 0));
+}
+const SFX = {
+  walk: () => tone(520, 440, .05, "triangle", .07),
+  jump: () => tone(300, 760, .18, "triangle", .12),
+  spring: () => { tone(180, 900, .28, "square", .06); tone(240, 1100, .3, "sine", .08); },
+  drop: () => { noise(.12, .08, .05); tone(240, 90, .35, "sine", .05, .05); },
+  lever: () => { tone(900, 900, .03, "square", .06); tone(600, 600, .04, "square", .06, .05); },
+  warp: () => { tone(900, 200, .15, "sine", .1); tone(200, 1000, .18, "sine", .1, .15); },
+  fall: () => tone(500, 70, .45, "sawtooth", .07),
+  bump: () => tone(130, 90, .07, "square", .06),
+  undo: () => tone(440, 330, .06, "triangle", .06),
+  win: () => [523, 659, 784, 1047].forEach((f, i) => tone(f, f, .18, "triangle", .1, i * .09)),
+};
+const buzz = ms => { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {} };
+
+// ------------------------------------------------------------ progress
+const SAVE_KEY = "tilerush3";
+let save = { stars: {}, best: {}, seen: [], sound: true };
+try { Object.assign(save, JSON.parse(localStorage.getItem(SAVE_KEY)) || {}); } catch (e) {}
+function persist() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) {} }
+const unlockAll = /[?&]all\b/.test(location.search);
+const isUnlocked = i => unlockAll || i === 0 || !!save.stars[i - 1];
+
+function starsFor(moves, par) {
+  if (moves <= par) return 3;
+  if (moves <= par + Math.max(2, Math.ceil(par * .25))) return 2;
+  return 1;
 }
 
-function render() {
- boardEl.innerHTML = "";
- for (let r = 0; r < grid.length; r++) {
-  for (let c = 0; c < grid[r].length; c++) {
-   const t = grid[r][c];
-   const d = document.createElement("div");
-   d.className = "cell";
-   if (t === "#") d.classList.add("wall");
-   else if (t === "H") d.classList.add("hole");
-   else if (t === "S") d.classList.add("spring");
-   else if (t === "J") d.classList.add("jump");
-   else if (t === "1" || t === "2") d.classList.add("tele"), d.textContent = t;
-   else if (t === "T") d.classList.add("trigger"), d.textContent = "T";
-   else if (t === "B") d.classList.add("bridge"), bridgesOpen && d.classList.add("open");
-   else if (t === "E") d.classList.add("exit"), d.textContent = "★";
-   else d.classList.add("floor");
-   if (pos && pos.r === r && pos.c === c) d.classList.add("player"), d.textContent = "●";
-   boardEl.appendChild(d);
+// ------------------------------------------------------------ home
+function showHome() {
+  $("game").classList.remove("on");
+  $("home").classList.add("on");
+  const grid = $("levelgrid");
+  grid.innerHTML = "";
+  let nextMarked = false;
+  LEVELS.forEach((L, i) => {
+    const b = document.createElement("button");
+    const s = save.stars[i] || 0;
+    const open = isUnlocked(i);
+    b.className = "lvbtn" + (open ? "" : " locked");
+    if (open && !s && !nextMarked) { b.classList.add("next"); nextMarked = true; }
+    b.innerHTML = open
+      ? `${i + 1}<span class="st">${"★".repeat(s)}<i>${"★".repeat(3 - s)}</i></span>`
+      : `🔒`;
+    b.setAttribute("aria-label", `Level ${i + 1}${open ? "" : " (locked)"}`);
+    if (open) b.onclick = () => startLevel(i);
+    grid.appendChild(b);
+  });
+  $("soundbtn").textContent = save.sound ? "🔊 Sound on" : "🔇 Sound off";
+}
+$("soundbtn").onclick = () => { save.sound = !save.sound; persist(); showHome(); };
+$("howbtn").onclick = () => showHowTo();
+
+// ------------------------------------------------------------ board (3D)
+let li = 0, lv, st, hist, busy = false, done = false;
+let tiles = [], cs = 50, gap = 5, TH = 10, WH = 26, TILT = 34;
+const scene = $("scene");
+const token = document.createElement("div");
+token.id = "token";
+token.innerHTML = PLAYER_SVG;
+const shadow = document.createElement("div");
+shadow.id = "shadow";
+
+function startLevel(i) {
+  li = i;
+  const L = LEVELS[i];
+  lv = makeLevel(L.grid);
+  st = initialState(lv);
+  hist = []; done = false; busy = false;
+  $("home").classList.remove("on");
+  $("game").classList.add("on");
+  $("lvnum").textContent = `LEVEL ${i + 1} OF ${LEVELS.length}`;
+  $("lvname").textContent = L.name;
+  $("hint").textContent = L.hint || "";
+  $("par").textContent = L.sol.length;
+  setMsg("");
+  buildBoard();
+  paint();
+  placeToken();
+  updateCounter();
+  showIntros(L.grid);
+}
+
+function layout() {
+  const stage = $("stage").getBoundingClientRect();
+  const availW = Math.min(innerWidth - 24, 460);
+  const availH = Math.max(stage.height - 30, 160);
+  const cosT = Math.cos(TILT * Math.PI / 180);
+  // a tilted board is shorter than it is deep; leave room for walls and the player
+  cs = Math.floor(Math.min(availW / (lv.w * 1.12), availH / (lv.h * 1.1 * cosT + 1.6), 70));
+  cs = Math.max(cs, 24);
+  gap = Math.max(3, Math.round(cs * .09));
+  TH = Math.round(cs * .28);
+  WH = Math.round(cs * .5);
+  const W = lv.w * cs + (lv.w - 1) * gap, H = lv.h * cs + (lv.h - 1) * gap;
+  scene.style.width = W + "px";
+  scene.style.height = H + "px";
+  scene.style.transform = `translate(-50%, -46%) rotateX(${TILT}deg)`;
+  scene.style.setProperty("--cs", cs + "px");
+  scene.style.setProperty("--th", TH + "px");
+  scene.style.setProperty("--wh", WH + "px");
+  document.documentElement.style.setProperty("--tilt", TILT + "deg");
+}
+
+const px = (r, c) => [c * (cs + gap), r * (cs + gap)];
+
+function tileZ(ch) { return ch === "#" ? WH : TH; }
+
+function buildBoard() {
+  scene.innerHTML = "";
+  layout();
+  tiles = [];
+  for (let r = 0; r < lv.h; r++) {
+    tiles.push([]);
+    for (let c = 0; c < lv.w; c++) {
+      const ch = lv.g[r][c];
+      const [x, y] = px(r, c);
+      if (ch !== "#") {
+        const s = document.createElement("div");
+        s.className = "slot";
+        s.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+        scene.appendChild(s);
+      }
+      let t = null;
+      if (ch !== "H") {
+        t = document.createElement("div");
+        t.className = "tile " + ({ "#": "w", "B": "br", "b": "br", "E": "exit", "T": "lever-t",
+          "1": "portal portal-a", "2": "portal portal-a", "3": "portal portal-b", "4": "portal portal-b" }[ch] || "");
+        t.innerHTML = ch === "J" ? ICON.jump : ch === "S" ? ICON.spring
+          : "12".includes(ch) ? ICON.portal("var(--portal-a)") : "34".includes(ch) ? ICON.portal("var(--portal-b)")
+          : ch === "E" ? `<div class="sprite star">${ICON.star}</div>`
+          : ch === "T" ? `<div class="sprite">${ICON.stick}</div>` : "";
+        t.dataset.r = r; t.dataset.c = c;
+        t.style.left = x + "px"; t.style.top = y + "px";
+        t.style.transform = `translateZ(${tileZ(ch)}px)`;
+        scene.appendChild(t);
+      }
+      tiles[r].push(t);
+    }
   }
- }
- document.getElementById("btnundo").disabled = history.length === 0;
+  scene.appendChild(shadow);
+  scene.appendChild(token);
 }
 
-function setMsg(txt, cls) { msgEl.textContent = txt; msgEl.className = cls || ""; }
+// Sync the board with the state: fallen tiles, bridge positions, lever.
+function paint(prev) {
+  for (let r = 0; r < lv.h; r++) {
+    for (let c = 0; c < lv.w; c++) {
+      const ch = lv.g[r][c], t = tiles[r][c];
+      if (!t || ch === "#") continue;
+      const fell = hasFallen(lv, st.fallen, r, c);
+      const wasFallen = prev && hasFallen(lv, prev.fallen, r, c);
+      if (fell && prev && !wasFallen) {
+        t.classList.add("dropping");
+        setTimeout(() => { if (t.classList.contains("dropping")) { t.classList.remove("dropping"); t.classList.add("gone"); } }, 620);
+      } else if (!prev || fell !== wasFallen) {
+        t.classList.remove("dropping");
+        t.classList.toggle("gone", fell);
+      }
+      if (ch === "B" || ch === "b") {
+        const across = (ch === "B") === !!st.lever;
+        // a hanging bridge swings down into the gap on its far hinge
+        if (!fell) t.style.transform = `translateZ(${TH}px) rotateX(${across ? 0 : -100}deg)`;
+      } else if (ch === "T") {
+        t.classList.toggle("on", !!st.lever);
+      }
+    }
+  }
+  $("undobtn").disabled = hist.length === 0;
+}
 
+// The player is an upright billboard standing on the tile, with a shadow
+// lying flat on the board under it.
+function tokT(x, y, z, s) {
+  return `translate3d(${x}px, ${y - cs / 2}px, ${z}px) rotateX(${-TILT}deg) scale(${s || 1})`;
+}
+function shadowT(x, y, z, s) {
+  return `translate3d(${x}px, ${y}px, ${z + 1}px) scale(${(s || 1) * .7}, ${(s || 1) * .45})`;
+}
+function placeToken() {
+  token.getAnimations().forEach(a => a.cancel());
+  shadow.getAnimations().forEach(a => a.cancel());
+  const [x, y] = px(st.r, st.c);
+  token.style.transform = tokT(x, y, TH);
+  shadow.style.transform = shadowT(x, y, TH);
+  token.style.opacity = 1; shadow.style.opacity = 1;
+}
+function look(dir) {
+  const [dr, dc] = DIRS[dir] || [0, 0];
+  token.querySelector(".eyes").style.transform = `translate(${dc * 2.4}px, ${dr * 1.6}px)`;
+}
+
+function updateCounter() { $("moves").textContent = hist.length; }
+
+function setMsg(text, cls) {
+  const m = $("msg");
+  m.textContent = text; m.className = cls || "";
+}
+
+// ------------------------------------------------------------ moves
 function move(dir) {
- if (done) return;
- const res = step(grid, pos.r, pos.c, bridgesOpen, dir);
- if (!res) { setMsg("Blocked."); return; }
- if (res.fall) {
-  setMsg("You fell in! ↩ Undo or ⟲ Restart.", "death");
-  history.push({ pos: { ...pos }, bridgesOpen, death: true });
-  render();
-  return;
- }
- history.push({ pos: { ...pos }, bridgesOpen, death: false });
- pos = { r: res.r, c: res.c };
- const openedBridge = res.bridgesOpen && !bridgesOpen;
- bridgesOpen = res.bridgesOpen;
- moves++;
- if (openedBridge) { setMsg("Bridges open!"); render(); return; }
- if (res.won) { win(); return; }
- setMsg(`Moves: ${moves}`);
- render();
+  if (busy || done || $("veil").classList.contains("on")) return;
+  look(dir);
+  const res = step(lv, st, dir);
+  if (!res) return blocked(dir);
+  if (res.fall) return fall(dir, res);
+  const prev = st;
+  hist.push(st);
+  st = res.st;
+  updateCounter();
+  animateMove(prev, res);
+  paint(prev);
+  setTimeout(SFX.drop, 90);
+  let say = "";
+  if (res.info.includes("lever")) { say = "Clunk! Every bridge swung."; setTimeout(SFX.lever, 120); }
+  else if (hist.length === 1 && !save.seenFall) {
+    say = "The tile behind you fell away. No going back!";
+    save.seenFall = true; persist();
+  }
+  setMsg(say, say ? "info" : "");
+  if (res.won) win();
+}
+
+function blocked(dir) {
+  const [dr, dc] = DIRS[dir];
+  const here = effTile(lv, st.r, st.c, st.lever, st.fallen);
+  const ahead = effTile(lv, st.r + dr, st.c + dc, st.lever, st.fallen);
+  let why = "";
+  if (here === "S") why = "The spring can't launch that way — it would hit a wall.";
+  else if (here === "J" && ahead === "H") why = "Too far to jump — a jump pad only clears one gap, onto a tile still standing.";
+  SFX.bump();
+  setMsg(why, why ? "bad" : "");
+  const [x, y] = px(st.r, st.c);
+  token.animate([
+    { transform: tokT(x, y, TH) },
+    { transform: tokT(x + dc * cs * .15, y + dr * cs * .15, TH) },
+    { transform: tokT(x, y, TH) }], { duration: 150, easing: "ease-out" });
+}
+
+function fall(dir, res) {
+  busy = true;
+  const ch = rawTile(lv, res.r, res.c);
+  const why = hasFallen(lv, st.fallen, res.r, res.c) ? "That tile already fell away."
+    : ch === "B" || ch === "b" ? "That bridge is hanging down — you fell into the gap."
+    : "Whoops — you fell in a hole.";
+  setMsg(why + " Back you go…", "bad");
+  SFX.fall(); buzz(60);
+  const [x, y] = px(st.r, st.c), [hx, hy] = px(res.r, res.c);
+  token.animate([
+    { transform: tokT(x, y, TH), opacity: 1 },
+    { transform: tokT((x + hx) / 2, (y + hy) / 2, TH + cs * .25), opacity: 1, offset: .25 },
+    { transform: tokT(hx, hy, 0), opacity: 1, offset: .45 },
+    { transform: tokT(hx, hy, -cs * 5, .5), opacity: 0 }],
+    { duration: 650, easing: "ease-in", fill: "forwards" });
+  shadow.animate([{ opacity: 1 }, { opacity: 0, offset: .4 }, { opacity: 0 }], { duration: 650, fill: "forwards" })
+    .onfinish = () => {
+      placeToken();
+      token.animate([{ transform: tokT(x, y, TH + cs, .6), opacity: 0 }, { transform: tokT(x, y, TH), opacity: 1 }],
+        { duration: 260, easing: "cubic-bezier(.3,1.5,.6,1)" });
+      busy = false;
+    };
+}
+
+function animateMove(prev, res) {
+  token.getAnimations().forEach(a => a.finish());
+  shadow.getAnimations().forEach(a => a.finish());
+  const [x0, y0] = px(prev.r, prev.c);
+  const [x1, y1] = px(res.land.r, res.land.c);
+  const [x2, y2] = px(res.st.r, res.st.c);
+  const kind = res.info[0];
+  const mx = (x0 + x1) / 2, my = (y0 + y1) / 2;
+  let peak, dur;
+  if (kind === "jump") { peak = cs * 1.1; dur = 300; SFX.jump(); }
+  else if (kind === "spring") {
+    const dist = Math.abs(res.land.r - prev.r) + Math.abs(res.land.c - prev.c);
+    peak = cs * (1 + dist * .35); dur = 240 + dist * 60; SFX.spring();
+  } else { peak = cs * .18; dur = 140; SFX.walk(); }
+  token.style.transform = tokT(x1, y1, TH);
+  shadow.style.transform = shadowT(x1, y1, TH);
+  const a = token.animate([
+    { transform: tokT(x0, y0, TH, kind === "walk" ? 1 : .85) },
+    { transform: tokT(mx, my, TH + peak, kind === "walk" ? 1 : 1.08) },
+    { transform: tokT(x1, y1, TH, kind === "walk" ? 1 : .9) }], { duration: dur, easing: "ease-in-out" });
+  shadow.animate([
+    { transform: shadowT(x0, y0, TH) },
+    { transform: shadowT(mx, my, TH, kind === "walk" ? 1 : .6) },
+    { transform: shadowT(x1, y1, TH) }], { duration: dur, easing: "ease-in-out" });
+  if (res.info.includes("warp")) {
+    token.style.transform = tokT(x2, y2, TH);
+    shadow.style.transform = shadowT(x2, y2, TH);
+    a.onfinish = () => {
+      SFX.warp();
+      token.animate([
+        { transform: tokT(x1, y1, TH, 1), opacity: 1 },
+        { transform: tokT(x1, y1, TH, .1), opacity: 0, offset: .45 },
+        { transform: tokT(x2, y2, TH, .1), opacity: 0, offset: .55 },
+        { transform: tokT(x2, y2, TH, 1), opacity: 1 }], { duration: 420, easing: "ease-in-out" });
+      shadow.animate([{ opacity: 1 }, { opacity: 0, offset: .45 }, { opacity: 0, offset: .55 }, { opacity: 1 }], { duration: 420 });
+    };
+  }
 }
 
 function undo() {
- const h = history.pop();
- if (!h) return;
- pos = h.pos; bridgesOpen = h.bridgesOpen;
- setMsg(h.death ? "Back from the pit." : "Undid a move.");
- render();
+  if (busy || !hist.length) return;
+  if (done) { done = false; closeCard(); }
+  st = hist.pop();
+  paint();
+  placeToken();
+  updateCounter();
+  SFX.undo();
+  setMsg("");
+}
+
+function restart() {
+  if (busy) return;
+  done = false; closeCard();
+  st = initialState(lv); hist = [];
+  paint(); placeToken(); updateCounter(); setMsg("");
 }
 
 function win() {
- done = true;
- const bestKey = "best" + li;
- const best = progress[bestKey];
- if (!best || moves < best) { progress[bestKey] = moves; saveProgress(); }
- progress.unlocked = Math.max(progress.unlocked || 0, li + 1);
- saveProgress();
- winstats.textContent = `Solved in ${moves} moves — best: ${progress[bestKey]} (par ${SOLUTIONS[li + 1]})`;
- winbox.classList.add("show");
- msgEl.textContent = "";
- if (li === LEVELS.length - 1) {
-  winbox.querySelector("h2").textContent = "ALL LEVELS CLEAR 🏆";
-  document.getElementById("btnnext").textContent = "Back to Level 1";
- }
- render();
+  done = true;
+  const moves = hist.length, par = LEVELS[li].sol.length;
+  const stars = starsFor(moves, par);
+  save.stars[li] = Math.max(save.stars[li] || 0, stars);
+  if (!save.best[li] || moves < save.best[li]) save.best[li] = moves;
+  persist();
+  setTimeout(() => {
+    const [x, y] = px(st.r, st.c);
+    token.animate([{ transform: tokT(x, y, TH) }, { transform: tokT(x, y, TH + cs * .7, 1.1) }, { transform: tokT(x, y, TH) }],
+      { duration: 380, easing: "ease-out" });
+  }, 260);
+  setTimeout(() => {
+    SFX.win(); buzz([30, 40, 30]);
+    const last = li === LEVELS.length - 1;
+    const note = moves <= par ? (moves < par ? "Under par?! You broke the solver." : "Perfect — you matched par.")
+      : stars === 2 ? `Par is ${par}. Can you find the shorter route?` : `Solved! Par is ${par} — there's a much tighter route.`;
+    openCard(`<div class="kicker">LEVEL ${li + 1} CLEAR</div>
+      <div class="stars">${[1, 2, 3].map(n => n <= stars ? `<span class="on" style="animation-delay:${n * .12}s">★</span>` : "★").join("")}</div>
+      <p><b style="color:var(--text)">${moves} moves</b> · par ${par} · best ${save.best[li]}</p>
+      <p style="margin-top:6px">${note}</p>
+      <div class="row">
+        <button class="alt" id="cardRetry">Retry</button>
+        <button class="go" id="cardNext">${last ? "All levels" : "Next level →"}</button>
+      </div>`);
+    $("cardRetry").onclick = restart;
+    $("cardNext").onclick = () => { closeCard(); last ? showHome() : startLevel(li + 1); };
+  }, 750);
 }
 
-function skip() { if (li < LEVELS.length - 1) loadLevel(li + 1); }
+// ------------------------------------------------------------ cards
+function openCard(html) { $("card").innerHTML = html; $("veil").classList.add("on"); }
+function closeCard() { $("veil").classList.remove("on"); }
 
-document.getElementById("btnup").onclick = () => move("U");
-document.getElementById("btndown").onclick = () => move("D");
-document.getElementById("btnleft").onclick = () => move("L");
-document.getElementById("btnright").onclick = () => move("R");
-document.getElementById("btnundo").onclick = undo;
-document.getElementById("btnreset").onclick = () => loadLevel(li);
-document.getElementById("btnskip").onclick = skip;
-document.getElementById("btnnext").onclick = () => loadLevel(li === LEVELS.length - 1 ? 0 : li + 1);
+const PLAYER_DEMO = `<div class="dc">${PLAYER_SVG}</div>`;
+
+function showIntros(grid) {
+  const kinds = new Set(grid.join("").split("").map(KIND));
+  const queue = [];
+  if (!save.seen.includes("basics")) queue.push("basics");
+  for (const k of INTRO_ORDER) if (kinds.has(k) && !save.seen.includes(k)) queue.push(k);
+  const next = () => {
+    const k = queue.shift();
+    if (!k) return closeCard();
+    save.seen.push(k); persist();
+    let demo, title, text;
+    if (k === "basics") {
+      title = "Every step is one-way";
+      text = "Swipe or use the arrows to move. Each tile falls away the moment you step off it, so you can never go back the way you came. Plan your route to the star. Undo is free.";
+      demo = `<div class="dc fell"></div><div class="dc fell"></div>${PLAYER_DEMO}${demoCell(".")}${demoCell("E")}`;
+    } else if (k === "T") {
+      title = "Lever & bridges";
+      text = INFO.T[1] + " " + INFO.B[1].replace(/ A lever.*$/, "");
+      demo = demoCell("T") + demoCell("B") + `<div class="dc gap"></div>`;
+    } else if (k === "J") {
+      title = INFO.J[0]; text = INFO.J[1];
+      demo = demoCell("J") + demoCell("H") + demoCell(".");
+    } else if (k === "S") {
+      title = INFO.S[0]; text = INFO.S[1] + " Gaps left by fallen tiles count too!";
+      demo = demoCell("S") + demoCell("H") + `<div class="dc fell"></div>` + demoCell("H") + demoCell(".");
+    } else if (k === "1") {
+      title = INFO["1"][0]; text = INFO["1"][1];
+      demo = demoCell("1") + `<div style="align-self:center;color:var(--dim)">⇄</div>` + demoCell("2");
+    } else {
+      title = INFO[k][0]; text = INFO[k][1]; demo = demoCell(k);
+    }
+    openCard(`<div class="kicker">${k === "basics" ? "HOW TO PLAY" : "NEW TILE"}</div><h2>${title}</h2>
+      <div class="demo">${demo}</div><p>${text}</p>
+      <div class="row"><button class="go" id="cardOk">Got it</button></div>`);
+    $("cardOk").onclick = next;
+  };
+  if (queue.length) next(); else closeCard();
+}
+
+function legendHTML(kinds) {
+  return `<div class="legend">` + kinds.map(k =>
+    `<div class="item">${demoCell(k)}<div><b>${INFO[k][0]}</b> — ${INFO[k][1]}</div></div>`).join("") + `</div>`;
+}
+function showLegend() {
+  const present = new Set(LEVELS[li].grid.join("").split("").map(KIND));
+  const kinds = [".", "#", "H", "J", "S", "T", "B", "1", "E"].filter(k => present.has(k));
+  openCard(`<div class="kicker">THIS LEVEL'S TILES</div>${legendHTML(kinds)}
+    <p style="margin-top:12px;font-size:.82rem">Tip: tap any tile on the board to see what it does.</p>
+    <div class="row"><button class="go" id="cardOk">Back to it</button></div>`);
+  $("cardOk").onclick = closeCard;
+}
+function showHowTo() {
+  openCard(`<div class="kicker">HOW TO PLAY</div><h2>Every step is one-way</h2>
+    <p>Swipe or use the arrows to move. Every tile falls away once you step off it — plan your whole route to the star. Undo is free and unlimited. Match par for three stars.</p>
+    ${legendHTML(["H", "J", "S", "T", "B", "1"])}
+    <div class="row"><button class="go" id="cardOk">Got it</button></div>`);
+  $("cardOk").onclick = closeCard;
+}
+
+// ------------------------------------------------------------ input
+$("bU").onclick = () => move("U");
+$("bD").onclick = () => move("D");
+$("bL").onclick = () => move("L");
+$("bR").onclick = () => move("R");
+$("undobtn").onclick = undo;
+$("resetbtn").onclick = restart;
+$("backbtn").onclick = () => { closeCard(); showHome(); };
+$("helpbtn").onclick = showLegend;
 
 addEventListener("keydown", e => {
- const k = { ArrowUp: "U", ArrowDown: "D", ArrowLeft: "L", ArrowRight: "R",
-  w: "U", s: "D", a: "L", d: "R" }[e.key];
- if (k) { e.preventDefault(); move(k); }
- if (e.key === "z") undo();
- if (e.key === "r") loadLevel(li);
+  if (!$("game").classList.contains("on")) return;
+  const k = { ArrowUp: "U", ArrowDown: "D", ArrowLeft: "L", ArrowRight: "R", w: "U", s: "D", a: "L", d: "R" }[e.key];
+  if ($("veil").classList.contains("on")) {
+    if (e.key === "Enter" || e.key === " ") { const b = $("card").querySelector(".go"); b && b.click(); e.preventDefault(); }
+    if (e.key === "z" || e.key === "Backspace") undo();
+    return;
+  }
+  if (k) { e.preventDefault(); move(k); }
+  else if (e.key === "z" || e.key === "Backspace") undo();
+  else if (e.key === "r") restart();
 });
 
-// swipe support
-let ts = null;
-addEventListener("touchstart", e => ts = e.touches[0], { passive: true });
-addEventListener("touchend", e => {
- if (!ts) return;
- const dx = e.changedTouches[0].clientX - ts.clientX;
- const dy = e.changedTouches[0].clientY - ts.clientY;
- if (Math.max(Math.abs(dx), Math.abs(dy)) < 28) return;
- move(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? "R" : "L") : (dy > 0 ? "D" : "U"));
- ts = null;
-}, { passive: true });
-
-addEventListener("resize", () => grid && resizeBoard());
-
-// --- verification boot: replay BFS solutions through the game's own step()
-function verifyAll() {
- const fails = [];
- for (let i = 0; i < LEVELS.length; i++) {
-  const g = LEVELS[i].grid.map(r => r.split(""));
-  let p = null, br = false;
-  for (let r = 0; r < g.length; r++)
-   for (let c = 0; c < g[r].length; c++)
-    if (g[r][c] === "P") p = { r, c };
-  const sol = SOLUTIONS[i + 1] || "";
-  let won = false;
-  for (const d of sol) {
-   const res = step(g, p.r, p.c, br, d);
-   if (!res || res.fall) { fails.push(`L${i+1} step ${d}`); break; }
-   p = { r: res.r, c: res.c };
-   br = res.bridgesOpen;
-   if (res.won) { won = true; break; }
+// Swipe anywhere on the game screen; a short tap on a tile explains it.
+let down = null;
+$("game").addEventListener("pointerdown", e => {
+  if (e.target.closest("button")) return;
+  down = { x: e.clientX, y: e.clientY, t: e.target };
+});
+$("game").addEventListener("pointerup", e => {
+  if (!down) return;
+  const dx = e.clientX - down.x, dy = e.clientY - down.y;
+  const dist = Math.hypot(dx, dy);
+  const t = down.t; down = null;
+  if (dist >= 24) {
+    move(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? "R" : "L") : (dy > 0 ? "D" : "U"));
+  } else if (dist < 10) {
+    const tile = t.closest && t.closest(".tile");
+    if (tile && scene.contains(tile)) explain(+tile.dataset.r, +tile.dataset.c);
   }
-  if (!won) fails.push(`L${i+1} not won`);
- }
- if (fails.length) console.error("VERIFY FAIL", fails);
- else console.log(`VERIFY OK: all ${LEVELS.length} levels solved through game step()`);
- return fails.length === 0;
-}
-const ok = verifyAll();
-if (!ok) document.title = "Tile Rush (VERIFY FAIL)";
+});
+$("game").addEventListener("pointercancel", () => down = null);
 
-const startLevel = Math.min(progress.unlocked || 0, LEVELS.length - 1);
-loadLevel(startLevel);
+function explain(r, c) {
+  const ch = lv.g[r][c];
+  let [name, text] = INFO[KIND(ch)] || INFO["."];
+  if (ch === "B" || ch === "b") name = effTile(lv, r, c, st.lever, st.fallen) === "H" ? "Bridge (hanging down)" : "Bridge (across)";
+  if (r === st.r && c === st.c && ch !== "E") name = "You — standing on " + (ch === "P" ? "a tile" : name.toLowerCase());
+  setMsg(`${name}: ${text}`, "info");
+  const t = tiles[r][c];
+  t.classList.add("tapped");
+  setTimeout(() => t.classList.remove("tapped"), 900);
+}
+
+addEventListener("resize", () => {
+  if (!$("game").classList.contains("on")) return;
+  buildBoard(); paint(); placeToken();
+});
+
+// ------------------------------------------------------------ boot
+// Replay every stored solution through the real engine. A broken deploy
+// announces itself in the tab title and the console.
+(function verifyAll() {
+  const fails = LEVELS.map((L, i) => replay(L.grid, L.sol) ? null : i + 1).filter(Boolean);
+  if (fails.length) { console.error("VERIFY FAIL: levels", fails); document.title = "Tile Rush (VERIFY FAIL)"; }
+  else console.log(`VERIFY OK: all ${LEVELS.length} levels solve through the game engine`);
+})();
+
+showHome();
+if (!save.seen.length) startLevel(0);
+
+if ("serviceWorker" in navigator && location.protocol === "https:") {
+  navigator.serviceWorker.register("sw.js").catch(() => {});
+}
 </script>
 </body>
 </html>

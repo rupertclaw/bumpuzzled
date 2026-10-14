@@ -1,39 +1,43 @@
 # Tile Rush
 
-Grid-routing brain-teaser puzzle game. Browser PWA, zero dependencies, zero build step, zero server, fully offline-capable.
+A grid-routing brain-teaser where every tile falls away behind you — so plan your whole route. Springs, jump pads, levers, drawbridges and portals; every level is proven solvable by a solver and has a par to beat.
+
+Browser PWA: no server, no build step, no dependencies, works offline, installs to your home screen.
 
 Live: https://rupertclaw.github.io/tile-rush/
 Repo: https://github.com/rupertclaw/tile-rush
 
-Inspired by Puzzle Crusher (Gamescan/Seascape Network) — a web3 puzzle-platformer that was abandoned before its web3 features ever shipped. Tile Rush rebuilds the part that was actually good: routing a character across a grid of special tiles.
+Inspired by classic tile-routing puzzle games. All code, art, sound and levels are original.
 
-## For developers / contributors
+## Playing
 
-Read [HANDOVER.md](HANDOVER.md) before touching anything. It explains the tile rules, the two-copies-of-level-data architecture, the verification pipeline, and the deployment gotchas.
+Swipe or use the arrow buttons. Undo is free and unlimited. Tap any tile to see what it does, or press **?** for this level's tiles. Match par for three stars.
 
-Quick start:
+Add `?all` to the URL to unlock every level (handy for testing).
+
+## Working on it
+
+Read [HANDOVER.md](HANDOVER.md) first. Needs Python 3 and Node.
 
 ```
-python3 sim.py     # solve all levels, write solutions.json
-python3 verify.py  # full cross-verification (requires node)
+python sim.py --fix   # solve every level in levels.js, store the solutions
+python verify.py      # ship check — must say ALL CHECKS PASS before you push
 ```
 
-Then open `index.html`.
-
-## Files
+Then serve the folder (`python -m http.server`) and open it.
 
 | File | Role |
 |---|---|
-| index.html | Game: UI, controls, progress, PWA shell + boot-time self-verification |
-| game-core.js | Pure game engine: LEVELS, step(), land() — no DOM |
+| index.html | The game: rendering, animation, input, intro cards, progress, sound |
+| game-core.js | Pure rules engine (no DOM) — `makeLevel`, `step`, `replay` |
+| levels.js | All level data. The only copy. |
 | sw.js | Service worker (offline cache) |
-| manifest.webmanifest | PWA manifest |
-| icon.svg | App icon |
-| sim.py | Python BFS level solver — proves every level is beatable, computes par |
-| solutions.json | Solver output: minimal solution path per level |
-| verify.py | Cross-verification: sim.py <-> solutions.json <-> game-core.js <- index.html |
-| DESIGN.md | Tile rules, design decisions log |
-| HANDOVER.md | Detailed contributor brief |
+| manifest.webmanifest, icon.svg | PWA install bits |
+| sim.py | Python copy of the rules + BFS solver + difficulty stats |
+| verify.py | Ship check: both engines agree on every reachable state, solutions valid, cache bumped |
+| levelgen.py | Dev tool: searches for hard layouts to curate |
+| DESIGN.md | Tile rules, design method, decisions log |
+| HANDOVER.md | Contributor brief |
 
 ## License
 

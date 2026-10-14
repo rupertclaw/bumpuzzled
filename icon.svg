@@ -1,8 +1,19 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <rect width="100" height="100" rx="20" fill="#0f1020"/>
-  <rect x="18" y="18" width="26" height="26" rx="6" fill="#262848"/>
-  <rect x="56" y="18" width="26" height="26" rx="6" fill="#4634a8"/>
-  <rect x="18" y="56" width="26" height="26" rx="6" fill="#0a0a14"/>
-  <rect x="56" y="56" width="26" height="26" rx="6" fill="#ffb84d"/>
-  <circle cx="69" cy="69" r="7" fill="#3d2600"/>
+  <defs>
+    <radialGradient id="g" cx=".35" cy=".3" r=".8">
+      <stop offset="0" stop-color="#fff1b8"/><stop offset=".5" stop-color="#ffcf5a"/><stop offset="1" stop-color="#c98f1c"/>
+    </radialGradient>
+  </defs>
+  <rect width="100" height="100" fill="#121329"/>
+  <rect x="16" y="16" width="32" height="32" rx="7" fill="#353a75"/>
+  <rect x="52" y="16" width="32" height="32" rx="7" fill="#07081a"/>
+  <rect x="16" y="52" width="32" height="32" rx="7" fill="#353a75"/>
+  <rect x="52" y="52" width="32" height="32" rx="7" fill="#2d3166"/>
+  <path d="M68 57l3.4 7 7.7 1-5.6 5.3 1.4 7.6L68 74.3l-6.9 3.6 1.4-7.6-5.6-5.3 7.7-1z" fill="#5fe08f"/>
+  <g fill="none" stroke="#ff9f43" stroke-width="2.6" stroke-linecap="round">
+    <path d="M22 78h20M24 74l16-4M24 69l16-4M24 64l16-4M22 58h20"/>
+  </g>
+  <circle cx="32" cy="33" r="12" fill="url(#g)"/>
+  <ellipse cx="28" cy="31.5" rx="2.1" ry="2.8" fill="#2a1a00"/>
+  <ellipse cx="36" cy="31.5" rx="2.1" ry="2.8" fill="#2a1a00"/>
 </svg>

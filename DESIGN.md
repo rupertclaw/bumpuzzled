@@ -2,79 +2,77 @@
 
 ## Origin
 
-Tribute to **Puzzle Crusher** (developed by Gamescan, incubated by Seascape Network). Puzzle Crusher was a web3 puzzle-platformer (iOS/Android) that went dead around 2024-2025: Play Store listing 404s, App Store returns zero results, puzzlecrusher.com domain dropped. Its web3 integrations never shipped. What the original player (Graeme) liked and what Tile Rush preserves: **the brain-teaser routing gameplay and its progressive difficulty curve**.
+Inspired by classic mobile tile-routing puzzles. The goal: **brain-teaser routing and a real difficulty curve** — no lives, no currencies, no meta layer. Undo is free and unlimited. All code, art, sound and levels are original.
 
-Tile Rush deliberately drops: web3/token/NFT mechanics, the original's hearts/lives economy, the building-upgrade meta layer. Design stance: pure puzzle, offline PWA, no server. Undo replaces death punishment.
+## The tile language (canonical)
 
-## The Tile Language (canonical rules)
+Implemented twice — `sim.py` (Python solver) and `game-core.js` (the game). `verify.py` runs both engines over every reachable state of every level and fails on any disagreement.
 
-Grid of characters. These rules are canon and implemented in **both** `sim.py` (Python, solver) and `game-core.js` (JS, game). They must stay identical. `verify.py` exists to catch drift.
-
-| Char | Name | Behavior |
+| Char | Name | Behaviour |
 |---|---|---|
-| `#` | Wall | Blocks movement. Nothing passes; springs blocked by it; jumps blocked by it. |
-| `.` | Floor | Plain walkable, 1 cell per move. |
-| `P` | Player start | Only one per level. Player spawns here. Behaves as floor. |
-| `H` | Hole | **Death** if walked into. Springs fly over hole runs. Jump pads leap exactly ONE adjacent hole. |
-| `J` | Jump pad | Walkable. When standing on J and pressing into an adjacent H: leap over it, landing 2 cells away. Landing must be floor-ish (not wall/H/closed bridge), else no move. |
-| `S` | Spring | Walkable. When standing on S and pressing any direction: launch straight in that direction, skipping every H, landing on the first landable tile. Blocked by wall/closed bridge (= no move). |
-| `T` | Trigger | Walkable. **Landing** on T opens every `B` in the level (one-way for that level visit; persists through undo? — currently yes, state is per-move snapshot; verify on change). |
-| `B` | Bridge | Closed B = wall. Open B = floor. Opened by T. |
-| `1`/`2`, `3`/`4` | Teleport pair | Walkable. **Landing** on one warps you instantly to its partner. Arrival tile effects at partner DO apply (e.g. warping onto E wins, warping onto T triggers). Only the landing check runs once (no infinite warp loops). |
-| `E` | Exit | Walkable. **Arriving** here wins the level. |
+| `#` | Wall | Blocks walking, jump landings and spring launches. Off the board counts as wall. |
+| `.` | Tile | Walk on it. **Every tile you step off falls away** (see below). |
+| `P` | Start | One per level. Acts as floor. |
+| `E` | Exit | One per level. Arriving wins. |
+| `H` | Hole | Walking in = fall. The player pops straight back (state unchanged, no move counted). |
+| `J` | Jump pad | Standing on J, push toward a hole: leap over exactly that one hole, landing 2 tiles away. Landing on a wall or another hole = no move. Pushing toward anything else is a normal step. |
+| `S` | Spring | Standing on S, push any way: fly over every hole in that direction and land on the first non-hole tile. If that tile is a wall, the launch doesn't happen. Adjacent solid tile = you just step there. |
+| `T` | Lever | **Landing** on it swings every bridge. |
+| `B` | Bridge (starts hanging) | Hanging = a gap that behaves exactly like a hole (springs fly over it, jump pads leap it, walking in = fall). Across = walkable. |
+| `b` | Bridge (starts across) | Same, but starts across. One lever swings every `B` and `b`. |
+| `1`/`2`, `3`/`4` | Portal pairs | **Landing** on one moves you to its twin. The entry portal falls as you pass through; the exit falls when you step off — one trip per pair. |
 
-### Movement semantics (exact)
+### Falling tiles (the core rule)
 
-- A move = press U/D/L/R.
-- Normal tiles: move 1 cell in that direction.
-- Arrival on a tile runs the "landing chain": T opens bridges; teleport warps (then partner's arrival chain runs ONCE); E wins.
-- Holes: stepping into H = death state (game shows "You fell in", move is recorded in history, undo recovers). Death is state-unchanged otherwise.
-- Springs: the launch ignores every H along the ray. First non-H tile decides: landable → land there (with landing chain); wall/closed-bridge → no move.
-- Jump pads: only when the tile directly ahead is H. Leap to exactly 2 cells ahead. Landing must be non-H, non-wall, non-closed-B.
-- Walls/closed bridges: direction press is a no-op (state unchanged). Game prints "Blocked."
+Every tile you leave — floor, start, spring, jump pad, lever, bridge, portal — falls away and becomes a gap. You can never retrace your steps, so every level is "plan your whole route". Fallen tiles are gaps like any other: springs fly over them, jump pads leap them.
+
+### Exact move order (mirrors `step()` in both engines)
+
+1. If standing on `S`: scan in the pushed direction past every hole-like tile; first other tile is the target, or a wall = blocked.
+2. Otherwise look at the adjacent tile:
+   - hole-like (H, a fallen tile, a hanging bridge): if standing on `J`, target is 2 tiles away (must not be wall or hole-like, else blocked); if not, **fall**.
+   - wall: blocked.
+   - anything else: target is that tile.
+3. The tile you're leaving falls away.
+4. Landing chain on the target: `T` flips the lever; a portal moves you to its twin; arriving on `E` wins.
 
 ### State
 
-BFS state = (player row, player col, bridgesOpen bool). Teleport/trigger/win are arrival effects. This state space is what `sim.py` searches.
+`(row, col, lever, fallen)` — `lever` is 0/1; `fallen` marks every cell that has fallen (a bitmask in Python, a "0101…" string in JS, index `row*width+col`). Nothing else carries over between moves; if you add a mechanic with memory, it must join this state in **both** engines and in the undo history.
 
-## Verification pipeline (critical)
+## Level design
 
-Three places hold level data + solutions. They must stay in lockstep:
+- One clear idea per level. The intro levels teach a single tile; the rest combine.
+- Difficulty is measured, not guessed: `python sim.py` prints, per level:
+  - `par` — shortest solution
+  - `traps` — moves that put you in a state you can never win from (you must undo)
+  - `on-path` — how many steps of the par route offer such a trap move. This is the best single "how hard does this feel" number.
+  - `optimal` — how many different shortest solutions exist (1 = tight)
+- `levelgen.py` is a sketchpad for finding hard layouts: give it a template (`?` = free cell) and the tiles to use; it hill-climbs for traps and strips clutter. Its output always needs a human pass for readability.
+- Mobile limit: max 9 wide × 11 tall (enforced by `sim.check_grid`). 5–7 wide plays best.
 
-1. `sim.py` — `LEVELS` dict (Python source of truth for solving)
-2. `game-core.js` — `LEVELS` array (game's live copy) AND `SOLUTIONS` map (par strings)
-3. `solutions.json` — solver output consumed by verify.py and the node replay harness
+## Stars
 
-Pipeline:
+3★ = par or better. 2★ = within par + max(2, 25% of par). 1★ = solved.
+
+## Pipeline
 
 ```
-python3 sim.py      # reads its LEVELS, writes solutions.json
-python3 verify.py   # checks: fresh BFS == solutions.json == game-core.js SOLUTIONS
-                    # compares game-core.js LEVELS grids vs sim.py LEVELS (structural)
-                    # replays every solution through game-core.js step() via node
+python sim.py --fix   # solve levels.js, write each level's "sol"
+python verify.py      # full ship check (needs node)
 ```
 
-All three must pass before shipping. `index.html` ALSO self-verifies at boot (replays SOLUTIONS through step(); sets document.title to "Tile Rush (VERIFY FAIL)" and logs console.error if broken).
-
-**Rule for contributors: never hand-edit level strings without re-running the full pipeline.** Hand-authored grids are how unsolvable levels happen.
+`index.html` also replays every level's `sol` at load and sets the tab title to `Tile Rush (VERIFY FAIL)` if any fail.
 
 ## Decisions log
 
-- 2026-09-27: Prototype scope = 6 levels, brain-teaser priority. No lives/hearts — undo instead. No meta progression buildings. Rationale: preserve what made Puzzle Crusher good, kill the churn mechanics.
-- 2026-09-27: BFS-first development: solver written before game code. Every level's par is proven, not guessed.
-- 2026-09-27: Death is recoverable (undo/restart), not a fail state with cost. No punishment loops.
-- 2026-09-27: Skip button exists in the prototype; should be dev-mode scaffolding only in a real release.
-- Planned: more levels (12-16), level editor with share-via-URL (levels encoded into the link, no server), visual polish.
-
-## Architecture notes
-
-- game-core.js is DOM-free on purpose. Pure functions: `tileAt(grid,r,c)`, `land(grid,r,c,bridgesOpen)`, `returns {r,c,bridgesOpen,won}` or `{fall:true}` or `null`. This is what makes node-based verification possible. Keep it pure.
-- index.html owns: rendering, input (buttons/swipe/keys), history/undo stack, localStorage progress (`tilerush` key), winbox UI, boot-time verification.
-- Progress keys in localStorage `tilerush`: `best<N>` = best move count per level (1-indexed), `unlocked` = highest reachable level index.
-- sim.py `solve()` returns minimal path as list of "UDLR" chars. Level number = 1-indexed in solutions.json ("1".."6") and SOLUTIONS keys.
-- sw.js: cache-first, version constant `CACHE = "tilerush-v1"`. **Bump v-string on every content change** or users keep stale code.
-
-## Deployment
-
-GitHub Pages, branch `main`, root. Deploys automatically on push to main. Custom domain: none. Live URL: https://rupertclaw.github.io/tile-rush/
-Deployment gotchas documented in HANDOVER.md.
+- 2026-09-27: Prototype — 6 levels, undo instead of lives, BFS-proven par.
+- 2026-10-14: Full rethink after playtest ("too easy, looks plain, rules unclear"):
+  - New mechanics with memory (cracked floor, lever-flipped bridges) so order matters and levels have real traps. Old one-shot trigger replaced by a lever that flips both ways; a raised bridge is a gap (not a wall) so springs and jump pads interact with it.
+  - Levels moved into one file (`levels.js`); `sim.py` reads it. `solutions.json` and the second level copy are gone — nothing left to drift.
+  - `verify.py` now compares the two engines on every reachable state, not just the solution path.
+  - Falling no longer needs an undo — you pop back automatically. Moves = current path length, so undo refunds moves.
+  - UI: tile art, move animations, intro card for each new tile, tap-a-tile explanations, legend, level select with stars, sound.
+  - Service worker switched to network-first, so online players never run stale code.
+- 2026-10-14 (later): Owner playtest feedback: tiles you've stepped on should fall away. Made it the core rule: every tile falls when you leave it (cracked floor removed as redundant; levers, springs, pads and portals are now one-use). All 16 levels redesigned for it. Board rebuilt as a real 3D tilted plane (CSS 3D transforms): tiles are slabs, walls are blocks, fallen tiles drop into the void, bridges swing on a hinge, player is an upright ball with a shadow. Progress key bumped to `tilerush3`.
+- Planned: level editor + share-by-URL (levels are small JSON, encode into the link hash).
