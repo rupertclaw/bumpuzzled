@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Tile Rush</title>
+<meta name="theme-color" content="#0f1020">
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+:root {
+ --bg: #0f1020; --panel: #1a1b2e; --tile: #262848; --tile-alt: #2d3060;
+ --wall: #3a3d6b; --hole: #0a0a14; --text: #e8e9ff; --dim: #8b8fc7;
+ --accent: #ffb84d; --green: #5cde8b;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; }
+body {
+ background: var(--bg); color: var(--text);
+ font-family: system-ui, -apple-system, sans-serif;
+ display: flex; flex-direction: column; align-items: center;
+ user-select: none; touch-action: manipulation;
+ overscroll-behavior: none;
+}
+header { padding: 12px 16px 4px; text-align: center; width: 100%; max-width: 560px; }
+h1 { font-size: 1.35rem; letter-spacing: 2px; }
+#levelname { color: var(--accent); font-size: .95rem; margin-top: 2px; font-weight: 600; }
+#board {
+ display: grid; gap: 3px; background: var(--panel);
+ padding: 10px; border-radius: 14px; margin: 8px 0;
+ box-shadow: 0 6px 24px rgba(0,0,0,.45);
+}
+.cell {
+ width: var(--cs, 34px); height: var(--cs, 34px);
+ border-radius: 7px; display: flex; align-items: center; justify-content: center;
+ font-size: calc(var(--cs, 34px) * .52);
+ background: var(--tile); color: var(--text);
+ transition: transform .08s ease, background .15s ease;
+}
+.cell.floor { background: var(--tile-alt); }
+.cell.wall { background: var(--wall); box-shadow: inset 0 0 0 2px rgba(255,255,255,.04); }
+.cell.hole { background: var(--hole); box-shadow: inset 0 3px 8px #000; }
+.cell.spring::after { content: "⬆"; font-size: .5em; color: #ffd9a0; position: absolute; margin-top: 10px; }
+.cell { position: relative; }
+.cell.jump::after { content: "⤒"; position: absolute; font-size: .55em; color: #a0e8ff; margin-top: 12px; }
+.cell.tele { background: #4634a8; }
+.cell.trigger { background: #7a4d1f; }
+.cell.bridge { background: #6b5a2e; }
+.cell.bridge.open { background: #a58a3a; animation: bridgepop .3s ease; }
+.cell.exit { background: var(--green); color: #0a3320; box-shadow: 0 0 12px rgba(92,222,139,.55); }
+.cell.player {
+ background: var(--accent); color: #3d2600; font-weight: 700;
+ box-shadow: 0 0 14px rgba(255,184,77,.6); z-index: 2;
+ animation: pop .12s ease;
+}
+@keyframes pop { 0% { transform: scale(.82); } 100% { transform: scale(1); } }
+@keyframes bridgepop { 0% { filter: brightness(2); } 100% { filter: none; } }
+#msg { min-height: 1.4em; font-size: .9rem; color: var(--dim); text-align: center; padding: 0 12px; }
+#msg.win { color: var(--green); font-weight: 700; }
+#msg.death { color: #ff7a7a; }
+#controls { display: grid; grid-template-areas: ". up ." "left down right"; gap: 8px; margin: 10px 0 6px; }
+#controls button {
+ width: 60px; height: 60px; font-size: 1.35rem;
+ background: var(--tile); color: var(--text); border: none; border-radius: 12px;
+ box-shadow: 0 3px 0 #12142c;
+}
+#controls button:active { transform: translateY(2px); box-shadow: 0 1px 0 #12142c; }
+#btnup { grid-area: up; } #btndown { grid-area: down; }
+#btnleft { grid-area: left; } #btnright { grid-area: right; }
+#actions { display: flex; gap: 8px; margin: 4px 0 14px; }
+#actions button {
+ background: var(--panel); color: var(--dim); border: 1px solid #2e3060;
+ padding: 8px 14px; border-radius: 10px; font-size: .9rem;
+}
+#actions button.primary { color: var(--accent); border-color: var(--accent); }
+footer { font-size: .75rem; color: #555a8f; padding-bottom: 12px; }
+#winbox {
+ display: none; position: fixed; inset: 0; background: rgba(10,10,25,.86);
+ align-items: center; justify-content: center; flex-direction: column; gap: 12px; z-index: 10;
+ text-align: center; padding: 20px;
+}
+#winbox.show { display: flex; }
+#winbox h2 { color: var(--green); }
+#winbox p { color: var(--dim); }
+#winbox button {
+ background: var(--accent); color: #3d2600; border: none;
+ padding: 12px 26px; border-radius: 12px; font-size: 1rem; font-weight: 700;
+}
+</style>
+</head>
+<body>
+<header>
+ <h1>TILE RUSH</h1>
+ <div id="levelname"></div>
+</header>
+<div id="board"></div>
+<div id="msg"></div>
+<div id="controls">
+ <button id="btnup">↑</button>
+ <button id="btnleft">←</button>
+ <button id="btndown">↓</button>
+ <button id="btnright">→</button>
+</div>
+<div id="actions">
+ <button id="btnundo">↩ Undo</button>
+ <button id="btnreset">⟲ Restart</button>
+ <button id="btnskip" class="primary">Skip →</button>
+</div>
+<footer>+D-Pad or arrow keys / WASD &middot; offline-ready</footer>
+<div id="winbox">
+ <h2>LEVEL CLEAR</h2>
+ <p id="winstats"></p>
+ <button id="btnnext">Next Level →</button>
+</div>
+<script src="game-core.js"></script>
+<script>
+const boardEl = document.getElementById("board");
+const msgEl = document.getElementById("msg");
+const levelNameEl = document.getElementById("levelname");
+const winbox = document.getElementById("winbox");
+const winstats = document.getElementById("winstats");
+
+let li = 0, grid, pos, bridgesOpen, history, moves, done = false;
+
+const progress = JSON.parse(localStorage.getItem("tilerush") || "{}");
+
+function saveProgress() { localStorage.setItem("tilerush", JSON.stringify(progress)); }
+
+function loadLevel(i) {
+ li = Math.min(i, LEVELS.length - 1);
+ grid = LEVELS[li].grid.map(r => r.split(""));
+ pos = null;
+ for (let r = 0; r < grid.length; r++)
+  for (let c = 0; c < grid[r].length; c++)
+   if (grid[r][c] === "P") pos = { r, c };
+ bridgesOpen = false;
+ history = []; moves = 0; done = false;
+ winbox.classList.remove("show");
+ msgEl.textContent = ""; msgEl.className = "";
+ levelNameEl.textContent = `Level ${li + 1} / ${LEVELS.length} — ${LEVELS[li].name}`;
+ resizeBoard();
+ render();
+}
+
+function resizeBoard() {
+ const maxW = Math.min(innerWidth - 44, 420);
+ const rows = grid.length, cols = grid[0].length;
+ const cs = Math.floor(Math.min(maxW / cols, 46, (innerHeight * .42) / rows));
+ boardEl.style.setProperty("--cs", Math.max(cs, 20) + "px");
+ boardEl.style.gridTemplateColumns = `repeat(${cols}, var(--cs))`;
+}
+
+function render() {
+ boardEl.innerHTML = "";
+ for (let r = 0; r < grid.length; r++) {
+  for (let c = 0; c < grid[r].length; c++) {
+   const t = grid[r][c];
+   const d = document.createElement("div");
+   d.className = "cell";
+   if (t === "#") d.classList.add("wall");
+   else if (t === "H") d.classList.add("hole");
+   else if (t === "S") d.classList.add("spring");
+   else if (t === "J") d.classList.add("jump");
+   else if (t === "1" || t === "2") d.classList.add("tele"), d.textContent = t;
+   else if (t === "T") d.classList.add("trigger"), d.textContent = "T";
+   else if (t === "B") d.classList.add("bridge"), bridgesOpen && d.classList.add("open");
+   else if (t === "E") d.classList.add("exit"), d.textContent = "★";
+   else d.classList.add("floor");
+   if (pos && pos.r === r && pos.c === c) d.classList.add("player"), d.textContent = "●";
+   boardEl.appendChild(d);
+  }
+ }
+ document.getElementById("btnundo").disabled = history.length === 0;
+}
+
+function setMsg(txt, cls) { msgEl.textContent = txt; msgEl.className = cls || ""; }
+
+function move(dir) {
+ if (done) return;
+ const res = step(grid, pos.r, pos.c, bridgesOpen, dir);
+ if (!res) { setMsg("Blocked."); return; }
+ if (res.fall) {
+  setMsg("You fell in! ↩ Undo or ⟲ Restart.", "death");
+  history.push({ pos: { ...pos }, bridgesOpen, death: true });
+  render();
+  return;
+ }
+ history.push({ pos: { ...pos }, bridgesOpen, death: false });
+ pos = { r: res.r, c: res.c };
+ const openedBridge = res.bridgesOpen && !bridgesOpen;
+ bridgesOpen = res.bridgesOpen;
+ moves++;
+ if (openedBridge) { setMsg("Bridges open!"); render(); return; }
+ if (res.won) { win(); return; }
+ setMsg(`Moves: ${moves}`);
+ render();
+}
+
+function undo() {
+ const h = history.pop();
+ if (!h) return;
+ pos = h.pos; bridgesOpen = h.bridgesOpen;
+ setMsg(h.death ? "Back from the pit." : "Undid a move.");
+ render();
+}
+
+function win() {
+ done = true;
+ const bestKey = "best" + li;
+ const best = progress[bestKey];
+ if (!best || moves < best) { progress[bestKey] = moves; saveProgress(); }
+ progress.unlocked = Math.max(progress.unlocked || 0, li + 1);
+ saveProgress();
+ winstats.textContent = `Solved in ${moves} moves — best: ${progress[bestKey]} (par ${SOLUTIONS[li + 1]})`;
+ winbox.classList.add("show");
+ msgEl.textContent = "";
+ if (li === LEVELS.length - 1) {
+  winbox.querySelector("h2").textContent = "ALL LEVELS CLEAR 🏆";
+  document.getElementById("btnnext").textContent = "Back to Level 1";
+ }
+ render();
+}
+
+function skip() { if (li < LEVELS.length - 1) loadLevel(li + 1); }
+
+document.getElementById("btnup").onclick = () => move("U");
+document.getElementById("btndown").onclick = () => move("D");
+document.getElementById("btnleft").onclick = () => move("L");
+document.getElementById("btnright").onclick = () => move("R");
+document.getElementById("btnundo").onclick = undo;
+document.getElementById("btnreset").onclick = () => loadLevel(li);
+document.getElementById("btnskip").onclick = skip;
+document.getElementById("btnnext").onclick = () => loadLevel(li === LEVELS.length - 1 ? 0 : li + 1);
+
+addEventListener("keydown", e => {
+ const k = { ArrowUp: "U", ArrowDown: "D", ArrowLeft: "L", ArrowRight: "R",
+  w: "U", s: "D", a: "L", d: "R" }[e.key];
+ if (k) { e.preventDefault(); move(k); }
+ if (e.key === "z") undo();
+ if (e.key === "r") loadLevel(li);
+});
+
+// swipe support
+let ts = null;
+addEventListener("touchstart", e => ts = e.touches[0], { passive: true });
+addEventListener("touchend", e => {
+ if (!ts) return;
+ const dx = e.changedTouches[0].clientX - ts.clientX;
+ const dy = e.changedTouches[0].clientY - ts.clientY;
+ if (Math.max(Math.abs(dx), Math.abs(dy)) < 28) return;
+ move(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? "R" : "L") : (dy > 0 ? "D" : "U"));
+ ts = null;
+}, { passive: true });
+
+addEventListener("resize", () => grid && resizeBoard());
+
+// --- verification boot: replay BFS solutions through the game's own step()
+function verifyAll() {
+ const fails = [];
+ for (let i = 0; i < LEVELS.length; i++) {
+  const g = LEVELS[i].grid.map(r => r.split(""));
+  let p = null, br = false;
+  for (let r = 0; r < g.length; r++)
+   for (let c = 0; c < g[r].length; c++)
+    if (g[r][c] === "P") p = { r, c };
+  const sol = SOLUTIONS[i + 1] || "";
+  let won = false;
+  for (const d of sol) {
+   const res = step(g, p.r, p.c, br, d);
+   if (!res || res.fall) { fails.push(`L${i+1} step ${d}`); break; }
+   p = { r: res.r, c: res.c };
+   br = res.bridgesOpen;
+   if (res.won) { won = true; break; }
+  }
+  if (!won) fails.push(`L${i+1} not won`);
+ }
+ if (fails.length) console.error("VERIFY FAIL", fails);
+ else console.log(`VERIFY OK: all ${LEVELS.length} levels solved through game step()`);
+ return fails.length === 0;
+}
+const ok = verifyAll();
+if (!ok) document.title = "Tile Rush (VERIFY FAIL)";
+
+const startLevel = Math.min(progress.unlocked || 0, LEVELS.length - 1);
+loadLevel(startLevel);
+</script>
+</body>
+</html>
