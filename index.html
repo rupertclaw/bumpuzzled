@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
-<title>Tile Rush</title>
+<title>Stepfall</title>
 <meta name="theme-color" content="#0e0f24">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
@@ -174,7 +174,7 @@ button { font: inherit; color: inherit; border: none; background: none; cursor: 
 <body>
 
 <section id="home" class="screen">
-  <div class="logo">TILE RUSH</div>
+  <div class="logo">STEPFALL</div>
   <div class="tag">Every step is one-way. Think first.</div>
   <div id="levelgrid"></div>
   <div class="homefoot">
@@ -778,7 +778,7 @@ addEventListener("resize", () => {
 // announces itself in the tab title and the console.
 (function verifyAll() {
   const fails = LEVELS.map((L, i) => replay(L.grid, L.sol) ? null : i + 1).filter(Boolean);
-  if (fails.length) { console.error("VERIFY FAIL: levels", fails); document.title = "Tile Rush (VERIFY FAIL)"; }
+  if (fails.length) { console.error("VERIFY FAIL: levels", fails); document.title = "Stepfall (VERIFY FAIL)"; }
   else console.log(`VERIFY OK: all ${LEVELS.length} levels solve through the game engine`);
 })();
 

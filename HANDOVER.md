@@ -1,5 +1,6 @@
-# Tile Rush — Contributor Handover Brief
+# Stepfall — Contributor Handover Brief
 
+**Game name:** Stepfall (renamed from Tile Rush on 2026-10-14; the repo and URL keep the old `tile-rush` slug so existing links and installs keep working)
 **Repo:** https://github.com/rupertclaw/tile-rush
 **Live site:** https://rupertclaw.github.io/tile-rush/ (GitHub Pages, branch `main`, root)
 **Updated:** 2026-10-14 (v2 rethink). Original brief: 2026-09-27 by Rupert.
@@ -69,7 +70,7 @@ No secrets, tokens or env vars anywhere — keep it that way.
 
 ## 6. Progress storage
 
-localStorage key `tilerush3` (bumped whenever the level set changes, so old progress is ignored): `{ stars: {levelIndex: 1-3}, best: {levelIndex: moves}, seen: [tile kinds whose intro card was shown], sound: bool }`. Level N unlocks when level N-1 has any stars.
+localStorage key `tilerush3` (bumped whenever the level set changes, so old progress is ignored; deliberately not renamed to `stepfall…` so players kept their progress through the rename): `{ stars: {levelIndex: 1-3}, best: {levelIndex: moves}, seen: [tile kinds whose intro card was shown], sound: bool }`. Level N unlocks when level N-1 has any stars.
 
 ## 7. Pitfalls
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tile Rush solver + reference engine.
+"""Stepfall solver + reference engine.
 
 Levels live in ONE place: levels.js (the JSON array between the /*BEGIN*/ and
 /*END*/ markers). This file reads them from there, so there is no second copy

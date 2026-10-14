@@ -1,4 +1,4 @@
-// Tile Rush levels — the ONLY copy of level data.
+// Stepfall levels — the ONLY copy of level data.
 // After editing: python sim.py --fix   (writes each "sol"), then python verify.py
 // Tiles: # wall  . floor  P start  E exit  H hole  J jump pad  S spring
 //        C cracked floor  T lever  B bridge (starts up)  b bridge (starts down)

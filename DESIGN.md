@@ -1,4 +1,4 @@
-# Tile Rush — Design & Rules Reference
+# Stepfall — Design & Rules Reference
 
 ## Origin
 
@@ -62,7 +62,7 @@ python sim.py --fix   # solve levels.js, write each level's "sol"
 python verify.py      # full ship check (needs node)
 ```
 
-`index.html` also replays every level's `sol` at load and sets the tab title to `Tile Rush (VERIFY FAIL)` if any fail.
+`index.html` also replays every level's `sol` at load and sets the tab title to `Stepfall (VERIFY FAIL)` if any fail.
 
 ## Decisions log
 
@@ -75,4 +75,5 @@ python verify.py      # full ship check (needs node)
   - UI: tile art, move animations, intro card for each new tile, tap-a-tile explanations, legend, level select with stars, sound.
   - Service worker switched to network-first, so online players never run stale code.
 - 2026-10-14 (later): Owner playtest feedback: tiles you've stepped on should fall away. Made it the core rule: every tile falls when you leave it (cracked floor removed as redundant; levers, springs, pads and portals are now one-use). All 16 levels redesigned for it. Board rebuilt as a real 3D tilted plane (CSS 3D transforms): tiles are slabs, walls are blocks, fallen tiles drop into the void, bridges swing on a hinge, player is an upright ball with a shadow. Progress key bumped to `tilerush3`.
-- Planned: level editor + share-by-URL (levels are small JSON, encode into the link hash).
+- 2026-10-14: Renamed Tile Rush → **Stepfall** (several existing apps already use "Tile Rush"). Repo/URL slug and save key unchanged.
+- Planned (on hold — owner wants to think about it): level editor + share-by-URL (levels are small JSON, encode into the link hash).
