@@ -17,7 +17,7 @@ A grid-routing brain-teaser PWA. Plain HTML/CSS/JS + a service worker: no server
 
 Owner preferences (constraints):
 - **Don't name or reference other games, studios or companies** in the repo or the game (it's public). Say "inspired by classic tile-routing puzzles" if anything. All code, art, sound and level layouts must be original — never copy assets, text or levels from another game.
-- Web2 only. No API keys in client code, ever. No server, no database. Everything local.
+- Web2 only. No secret API keys in client code, ever (public IDs like the GA measurement ID are fine). No server, no database. Everything local.
 - Mobile-first PWA; must work offline.
 - Simple, universal UX over platform-specific branching.
 - Owner is a vibe-coder: plain English, analogies over jargon, short reports.
@@ -71,6 +71,14 @@ No secrets, tokens or env vars anywhere — keep it that way.
 ## 6. Progress storage
 
 localStorage key `tilerush3` (bumped whenever the level set changes, so old progress is ignored; deliberately not renamed when the game was, so players keep their progress): `{ stars: {levelIndex: 1-3}, best: {levelIndex: moves}, seen: [tile kinds whose intro card was shown], sound: bool }`. Level N unlocks when level N-1 has any stars.
+
+## 6b. Analytics (Google Analytics 4)
+
+Measurement ID `G-R35C5BTKY6` (a public ID, not a secret). Code is the "analytics" block in index.html.
+- Runs **only on bumpuzzled.com** (`GA_ON`). Add `?ga_debug` to test anywhere else (sends to the same property with debug_mode — use GA's DebugView).
+- Consent: Google consent mode. `analytics_storage` defaults to granted, but **denied in UK/EU/EEA/CH** (region list in code). Players whose device time zone is in Europe (incl. Cyprus `Asia/Nicosia`) see a small OK / No thanks banner; their choice is stored in `save.consent` and can be changed from **Privacy** on the home screen (anyone can turn analytics off there). Ads storage is always denied.
+- Events: `app_open {display_mode}`, `app_installed`, `level_start {level_number, level_name}`, `level_complete {level_number, level_name, moves, par, stars, first_clear}`, `level_restart {level_number, moves}`, `level_quit {level_number, moves}`, `share {method, level_number}`. User property `display_mode` = installed | browser (installed = launched from the home-screen icon; works on iPhone, unlike `app_installed` which only Android/desktop Chrome fire).
+- Any new tracking must be added to the Privacy card text too.
 
 ## 7. Pitfalls
 

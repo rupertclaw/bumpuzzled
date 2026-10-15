@@ -51,6 +51,17 @@ button { font: inherit; color: inherit; border: none; background: none; cursor: 
   color: var(--faint); font-size: .85rem; text-align: center; display: flex; flex-direction: column; gap: 3px; }
 .soon b { color: var(--dim); font-size: .95rem; }
 .homefoot { margin-top: 22px; display: flex; gap: 10px; }
+.linkbtn { margin-top: 14px; color: var(--faint); font-size: .8rem; text-decoration: underline; }
+.consent { position: fixed; left: 12px; right: 12px; bottom: max(12px, env(safe-area-inset-bottom)); z-index: 30;
+  max-width: 440px; margin: 0 auto; background: var(--bg2); border: 1px solid var(--line); border-radius: 16px;
+  padding: 14px 16px; box-shadow: 0 12px 40px rgba(0,0,0,.6); display: none; animation: rise .25s ease; }
+.consent.on { display: block; }
+.consent p { color: var(--dim); font-size: .88rem; line-height: 1.4; }
+.consent .row { display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px; }
+.consent .go { background: var(--gold); color: #3a2600; font-weight: 800; padding: 10px 22px; border-radius: 12px; }
+.consent .alt { background: var(--panel); border: 1px solid var(--line); color: var(--dim); padding: 10px 16px; border-radius: 12px; }
+.card .privacy { text-align: left; font-size: .88rem; }
+.card .privacy p + p { margin-top: 8px; }
 .pill { padding: 10px 16px; border-radius: 12px; background: var(--panel); border: 1px solid var(--line);
   color: var(--dim); font-size: .9rem; }
 .small { margin-top: 16px; color: var(--faint); font-size: .75rem; text-align: center; }
@@ -194,6 +205,7 @@ button { font: inherit; color: inherit; border: none; background: none; cursor: 
     <button class="pill" id="howbtn">How to play</button>
     <button class="pill" id="soundbtn"></button>
   </div>
+  <button class="linkbtn" id="privacybtn">Privacy</button>
   <div class="small">Works offline · progress saved on this device</div>
 </section>
 
@@ -222,6 +234,14 @@ button { font: inherit; color: inherit; border: none; background: none; cursor: 
 </section>
 
 <div class="veil" id="veil"><div class="card" id="card"></div></div>
+
+<div class="consent" id="consent" role="dialog" aria-label="Analytics cookies">
+  <p>We use analytics cookies to see which levels players enjoy and where they get stuck, so we can make the game better.</p>
+  <div class="row">
+    <button class="alt" id="consentNo">No thanks</button>
+    <button class="go" id="consentYes">OK</button>
+  </div>
+</div>
 
 <script src="game-core.js"></script>
 <script src="levels.js"></script>
@@ -337,6 +357,74 @@ const isUnlocked = i => unlockAll || i === 0 || !!save.stars[i - 1];
 
 const totalStars = () => LEVELS.reduce((n, _, i) => n + (save.stars[i] || 0), 0);
 
+// ------------------------------------------------------------ analytics
+// Google Analytics 4, on the production site only (local testing doesn't
+// pollute the numbers; add ?ga_debug to test elsewhere). UK/EU/EEA/CH:
+// analytics cookies are off by default (Google consent mode, region-based)
+// until the player taps OK. The banner shows when the device's time zone is in
+// Europe; anyone Google places in those regions stays cookie-free without an OK.
+const GA_ID = "G-R35C5BTKY6";
+const GA_DEBUG = /[?&]ga_debug\b/.test(location.search);
+const GA_ON = location.hostname === "bumpuzzled.com" || GA_DEBUG;
+const CONSENT_REGIONS = ["AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR", "HU", "IE",
+  "IT", "LV", "LT", "LU", "MT", "NL", "PL", "PT", "RO", "SK", "SI", "ES", "SE", "IS", "LI", "NO", "GB", "CH"];
+window.dataLayer = window.dataLayer || [];
+function gtag() { dataLayer.push(arguments); }
+const isInstalled = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+function track(name, params) { if (GA_ON && save.consent !== "denied") gtag("event", name, params || {}); }
+
+function inEuropeTZ() {
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+    return tz.startsWith("Europe/") || /^(Atlantic\/(Canary|Madeira|Azores|Reykjavik|Faroe)|Asia\/(Nicosia|Famagusta))$/.test(tz);
+  } catch (e) { return false; }
+}
+
+function initAnalytics() {
+  if (!GA_ON) return;
+  const off = { ad_storage: "denied", ad_user_data: "denied", ad_personalization: "denied" };
+  gtag("consent", "default", { ...off, analytics_storage: "granted" });
+  gtag("consent", "default", { ...off, analytics_storage: "denied", region: CONSENT_REGIONS });
+  if (save.consent) gtag("consent", "update", { analytics_storage: save.consent });
+  gtag("js", new Date());
+  const cfg = { user_properties: { display_mode: isInstalled() ? "installed" : "browser" } };
+  if (GA_DEBUG) cfg.debug_mode = true;
+  gtag("config", GA_ID, cfg);
+  const sc = document.createElement("script");
+  sc.async = true;
+  sc.src = "https://www.googletagmanager.com/gtag/js?id=" + GA_ID;
+  document.head.appendChild(sc);
+  track("app_open", { display_mode: isInstalled() ? "installed" : "browser" });
+  addEventListener("appinstalled", () => track("app_installed"));
+  if (!save.consent && inEuropeTZ()) $("consent").classList.add("on");
+}
+
+function setConsent(choice) {
+  save.consent = choice; persist();
+  if (GA_ON) gtag("consent", "update", { analytics_storage: choice });
+  $("consent").classList.remove("on");
+}
+$("consentYes").onclick = () => setConsent("granted");
+$("consentNo").onclick = () => setConsent("denied");
+
+function showPrivacy() {
+  const on = save.consent !== "denied";
+  openCard(`<div class="kicker">PRIVACY</div><h2>What we collect</h2>
+    <div class="privacy">
+      <p>Bumpuzzled uses Google Analytics to count players and see which levels people finish or get stuck on, so we can improve the game.</p>
+      <p>It records game events (level number, moves, stars, shares, installs) plus standard details like device type and approximate location (country/city). No names, emails or accounts.</p>
+      <p>Your progress is saved only on this device. In the UK and EU, analytics cookies are only used if you say OK.</p>
+      <p>Analytics is currently <b style="color:var(--text)">${on ? "on" : "off"}</b>.</p>
+    </div>
+    <div class="row">
+      <button class="alt" id="privToggle">${on ? "Turn analytics off" : "Turn analytics on"}</button>
+      <button class="go" id="cardOk">Done</button>
+    </div>`);
+  $("privToggle").onclick = () => { setConsent(on ? "denied" : "granted"); showPrivacy(); };
+  $("cardOk").onclick = closeCard;
+}
+$("privacybtn").onclick = showPrivacy;
+
 function starsFor(moves, par) {
   if (moves <= par) return 3;
   if (moves <= par + Math.max(2, Math.ceil(par * .25))) return 2;
@@ -388,8 +476,15 @@ token.innerHTML = PLAYER_SVG;
 const shadow = document.createElement("div");
 shadow.id = "shadow";
 
+let playing = false;   // a level is open and not yet won (for level_quit)
+function quitIfPlaying() {
+  if (playing && !done && hist.length) track("level_quit", { level_number: li + 1, moves: hist.length });
+  playing = false;
+}
+
 function startLevel(i) {
   winSeq++;
+  quitIfPlaying();
   li = i;
   const L = LEVELS[i];
   lv = makeLevel(L.grid);
@@ -401,6 +496,8 @@ function startLevel(i) {
   $("lvname").textContent = L.name;
   $("hint").textContent = L.hint || "";
   $("par").textContent = L.sol.length;
+  playing = true;
+  track("level_start", { level_number: i + 1, level_name: L.name });
   setMsg("");
   buildBoard();
   paint();
@@ -643,6 +740,7 @@ function undo() {
 function restart() {
   winSeq++;
   if (busy) return;
+  if (hist.length && !done) track("level_restart", { level_number: li + 1, moves: hist.length });
   done = false; closeCard();
   st = initialState(lv); hist = [];
   paint(); placeToken(); updateCounter(); setMsg("");
@@ -654,6 +752,9 @@ function win() {
   const seq = ++winSeq;
   const moves = hist.length, par = LEVELS[li].sol.length;
   const stars = starsFor(moves, par);
+  track("level_complete", { level_number: li + 1, level_name: LEVELS[li].name, moves, par, stars,
+    first_clear: !save.stars[li] });
+  playing = false;
   save.stars[li] = Math.max(save.stars[li] || 0, stars);
   if (!save.best[li] || moves < save.best[li]) save.best[li] = moves;
   persist();
@@ -702,12 +803,13 @@ async function shareResult(i, moves, par, stars) {
     `Can you beat it? ${SHARE_URL}`;
   const note = $("cardShared");
   if (navigator.share) {
-    try { await navigator.share({ text }); return; }
+    try { await navigator.share({ text }); track("share", { method: "native", level_number: i + 1 }); return; }
     catch (e) { if (e && e.name === "AbortError") return; }
   }
   try {
     await navigator.clipboard.writeText(text);
     note.textContent = "Copied! Paste it anywhere.";
+    track("share", { method: "clipboard", level_number: i + 1 });
   } catch (e) {
     // last resort: show the text so it can be copied by hand
     note.innerHTML = "";
@@ -784,7 +886,7 @@ $("bL").onclick = () => move("L");
 $("bR").onclick = () => move("R");
 $("undobtn").onclick = undo;
 $("resetbtn").onclick = restart;
-$("backbtn").onclick = () => { winSeq++; closeCard(); showHome(); };
+$("backbtn").onclick = () => { winSeq++; quitIfPlaying(); closeCard(); showHome(); };
 $("helpbtn").onclick = showLegend;
 
 addEventListener("keydown", e => {
@@ -845,6 +947,7 @@ addEventListener("resize", () => {
   else console.log(`VERIFY OK: all ${LEVELS.length} levels solve through the game engine`);
 })();
 
+initAnalytics();
 showHome();
 if (!save.seen.length) startLevel(0);
 
