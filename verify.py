@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Stepfall ship check. Run before every push:  python verify.py
+"""Bumpuzzled ship check. Run before every push:  python verify.py
 
   1. Every level in levels.js is a valid grid and solvable.
   2. Each level's stored "sol" is a shortest solution (BFS par).

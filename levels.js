@@ -1,19 +1,21 @@
-// Stepfall levels — the ONLY copy of level data.
+// Bumpuzzled levels — the ONLY copy of level data.
 // After editing: python sim.py --fix   (writes each "sol"), then python verify.py
 // Tiles: # wall  . floor  P start  E exit  H hole  J jump pad  S spring
 //        C cracked floor  T lever  B bridge (starts up)  b bridge (starts down)
 //        1/2 and 3/4 portal pairs
 const LEVELS = /*BEGIN*/[
  {
+  "section": "Learning the ropes",
   "name": "First Steps",
-  "hint": "Tiles fall away behind you. Pick your path.",
+  "hint": "Tiles fall away behind you. Look before you leap.",
   "grid": [
-   "P..#",
    ".#..",
-   "...#",
-   "#..E"
+   "....",
+   "P.#.",
+   ".#..",
+   "#E.."
   ],
-  "sol": "DDRDRR"
+  "sol": "URRRDDDLL"
  },
  {
   "name": "Dead Ends",
@@ -31,11 +33,13 @@ const LEVELS = /*BEGIN*/[
   "name": "Hop",
   "hint": "Jump pads clear one gap. Not two.",
   "grid": [
-   "P.JH.",
-   "##.#.",
-   "EHJ.."
+   ".J.J.",
+   ".H.HE",
+   "..#.#",
+   "JH.H.",
+   ".HJJP"
   ],
-  "sol": "RRDDL"
+  "sol": "LLLUUUURRRRD"
  },
  {
   "name": "Leapfrog",
@@ -51,13 +55,15 @@ const LEVELS = /*BEGIN*/[
  },
  {
   "name": "Boing",
-  "hint": "Take the long way to the spring. Every tile you leave becomes a gap it can fly over.",
+  "hint": "Springs fly over every gap — including the ones you leave behind.",
   "grid": [
-   "EH..S",
-   "##.#.",
-   "P...."
+   "..#..",
+   "H..S.",
+   "SH..S",
+   "..#.P",
+   "E#..."
   ],
-  "sol": "RRUURRL"
+  "sol": "LULURRDLDD"
  },
  {
   "name": "Spring Loaded",
@@ -86,13 +92,15 @@ const LEVELS = /*BEGIN*/[
  },
  {
   "name": "Lever",
-  "hint": "Something has to bring that bridge across.",
+  "hint": "Every lever swings every bridge.",
   "grid": [
-   "P.T",
-   "##.",
-   "EB."
+   ".Tb..",
+   "..bTP",
+   ".##.#",
+   "..bT#",
+   ".#.BE"
   ],
-  "sol": "RRDDLL"
+  "sol": "ULLDLLDDRRRDR"
  },
  {
   "name": "Switchback",
@@ -123,11 +131,13 @@ const LEVELS = /*BEGIN*/[
   "name": "Warp",
   "hint": "Portals take you somewhere new — once.",
   "grid": [
-   "P.1#.E",
-   "####.#",
-   "H..#2."
+   "..2.1",
+   ".#..#",
+   ".#...",
+   "..#P.",
+   "E#..#"
   ],
-  "sol": "RRUUR"
+  "sol": "UUURLLDDDD"
  },
  {
   "name": "Wormhole",
@@ -193,6 +203,220 @@ const LEVELS = /*BEGIN*/[
    ".PJ..."
   ],
   "sol": "RRRUULLLLURRRDRUUUU"
+ },
+ {
+  "section": "Expert",
+  "name": "Long Haul",
+  "hint": "A bigger board. Same rule: no going back.",
+  "grid": [
+   "...#E.",
+   ".#...#",
+   ".#..#P",
+   "..#.#.",
+   ".#.#..",
+   "......",
+   "..#.#."
+  ],
+  "sol": "DDDLLLLLUUUUURRDRRU"
+ },
+ {
+  "name": "Spring Fever",
+  "hint": "Count the gaps before you jump.",
+  "grid": [
+   "S..P..",
+   ".#.##.",
+   ".S#..#",
+   ".HJ.#.",
+   "SH..H.",
+   "...#ES"
+  ],
+  "sol": "LLLDDRDRURULLDRDL"
+ },
+ {
+  "name": "Hopscotch",
+  "hint": "Levers, pads and bridges. Choose your order.",
+  "grid": [
+   "E..#..",
+   "#BHJ..",
+   "#.#b#J",
+   ".#.BT.",
+   "T...b.",
+   "PTbT#."
+  ],
+  "sol": "URDRURRURUULLLUL"
+ },
+ {
+  "name": "Two Doors",
+  "hint": "One portal pair, one shot.",
+  "grid": [
+   "E..S.S",
+   "3..H.S",
+   "S##.#S",
+   "..#..S",
+   "P.HJ#H",
+   ".#..4."
+  ],
+  "sol": "UUULUURRUUULLLLL"
+ },
+ {
+  "name": "Ricochet",
+  "hint": "The long way is the only way.",
+  "grid": [
+   "#E.S#.",
+   ".#..J.",
+   "P.#.H.",
+   "...#..",
+   ".#.#..",
+   "#..JHS"
+  ],
+  "sol": "DRRDDRRUUUULLULL"
+ },
+ {
+  "name": "Crossed Wires",
+  "hint": "Two portal pairs. Which first?",
+  "grid": [
+   "2...#.",
+   "1.S#P.",
+   ".#..3.",
+   "JH.#..",
+   ".E#.HS",
+   ".#..4#"
+  ],
+  "sol": "RDDDLDRLLUULLDDDR"
+ },
+ {
+  "name": "Tollgate",
+  "hint": "Pay the lever a visit.",
+  "grid": [
+   "..SS.E",
+   "..##.#",
+   "#B#.#.",
+   "..#T..",
+   ".....#",
+   "P....."
+  ],
+  "sol": "RRRRUULDLLUUUURRRR"
+ },
+ {
+  "name": "Gatekeeper",
+  "hint": "Two levers, two bridges, one route.",
+  "grid": [
+   "EJ.J..",
+   "#H.#b#",
+   "..#..T",
+   ".T.#B.",
+   "B.JP.#",
+   "......"
+  ],
+  "sol": "DLLUURDRURULUULLLL"
+ },
+ {
+  "name": "Slingshot",
+  "hint": "Springs, pads and a portal. Waste none of them.",
+  "grid": [
+   "..J.#E",
+   "S.H2#S",
+   ".S1H.J",
+   "S.#..H",
+   "H.SHH.",
+   ".HS..P"
+  ],
+  "sol": "LLLULULUUURRRDLRRUU"
+ },
+ {
+  "name": "Switchyard",
+  "hint": "The lever is on the way. Or is it?",
+  "grid": [
+   ".#....",
+   ".1TJ.2",
+   "..#..P",
+   "J#.#..",
+   "S...#.",
+   "#.##E#",
+   "...B.."
+  ],
+  "sol": "LUULLDRRDLDDRDDRRRU"
+ },
+ {
+  "name": "Flip Side",
+  "hint": "Too many levers? Every flip counts.",
+  "grid": [
+   "B.TB..",
+   "E#J..#",
+   "#.#.B.",
+   ".#...T",
+   ".T...T",
+   "PB#.JJ"
+  ],
+  "sol": "URRRRRDLULUULULLD"
+ },
+ {
+  "name": "Spring Trap",
+  "hint": "Three springs in a row. Only one is your friend.",
+  "grid": [
+   "SSS##E",
+   "T....B",
+   ".B....",
+   "#.b#..",
+   "S..H.P",
+   ".#.#S."
+  ],
+  "sol": "ULULLULLURRDLLRDURU"
+ },
+ {
+  "name": "Labyrinth",
+  "hint": "Plan the whole route before your first step.",
+  "grid": [
+   ".#..#E",
+   "S.H.SS",
+   ".B.#HH",
+   ".##...",
+   "...PT#",
+   "S..BT.",
+   "J.S..."
+  ],
+  "sol": "LDLLRDLLLLUUURULRRRU"
+ },
+ {
+  "name": "Domino",
+  "hint": "Every move sets up the next.",
+  "grid": [
+   ".#..#E",
+   "...B..",
+   "..PJ##",
+   "#.J..S",
+   ".#.BJ.",
+   "S.HSBS",
+   ".T.#.."
+  ],
+  "sol": "RDRRDDLLDLURULLUURRRU"
+ },
+ {
+  "name": "Gauntlet",
+  "hint": "Almost there. Almost.",
+  "grid": [
+   "E#S...",
+   "H#T#.T",
+   "....H.",
+   "B..#..",
+   "S...S.",
+   ".PHS.S"
+  ],
+  "sol": "URRDRRUULDUULLDDLLDDU"
+ },
+ {
+  "name": "Bumpuzzler",
+  "hint": "The final boss. Good luck.",
+  "grid": [
+   ".#.1SP",
+   "...#..",
+   ".2.b..",
+   "J.##.B",
+   "B...#S",
+   "S.#.#E",
+   "..T..#"
+  ],
+  "sol": "DLDLLULLDDDDRRRUULLUURDRDD"
  }
 ]/*END*/;
 

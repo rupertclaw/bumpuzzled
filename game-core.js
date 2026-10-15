@@ -1,4 +1,4 @@
-// Stepfall engine. Pure: no document, window or localStorage in here, so
+// Bumpuzzled engine. Pure: no document, window or localStorage in here, so
 // verify.py can run it in node. Rules must match sim.py exactly — verify.py
 // runs both engines over every reachable state of every level to check.
 //

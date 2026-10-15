@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Stepfall solver + reference engine.
+"""Bumpuzzled solver + reference engine.
 
 Levels live in ONE place: levels.js (the JSON array between the /*BEGIN*/ and
 /*END*/ markers). This file reads them from there, so there is no second copy
@@ -42,7 +42,7 @@ def dump_levels(levels):
     out = ["["]
     for i, lv in enumerate(levels):
         out.append(" {")
-        keys = [k for k in ("name", "hint", "grid", "sol") if k in lv]
+        keys = [k for k in ("section", "name", "hint", "grid", "sol") if k in lv]
         keys += [k for k in lv if k not in keys]
         for j, k in enumerate(keys):
             comma = "," if j < len(keys) - 1 else ""

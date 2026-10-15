@@ -1,6 +1,6 @@
 // Bump CACHE whenever any shipped file changes, or returning players keep
 // running the old version. verify.py checks this against origin/main.
-const CACHE = "stepfall-v4";
+const CACHE = "bumpuzzled-v5";
 const ASSETS = ["./", "./index.html", "./game-core.js", "./levels.js", "./manifest.webmanifest", "./icon.svg"];
 
 self.addEventListener("install", e => {
@@ -16,11 +16,13 @@ self.addEventListener("activate", e => {
 });
 
 // Network first, cache as fallback: online players always get the latest
-// version, offline players still get the last one they loaded.
+// version, offline players still get the last one they loaded. "no-cache"
+// makes the browser re-check with the server instead of trusting its own
+// HTTP cache, so a fresh index.html never runs with a stale levels.js.
 self.addEventListener("fetch", e => {
-  if (e.request.method !== "GET") return;
+  if (e.request.method !== "GET" || new URL(e.request.url).origin !== location.origin) return;
   e.respondWith(
-    fetch(e.request).then(resp => {
+    fetch(e.request.url, { cache: "no-cache" }).then(resp => {
       if (resp.ok) {
         const copy = resp.clone();
         caches.open(CACHE).then(c => c.put(e.request, copy));

@@ -1,4 +1,4 @@
-# Stepfall — Design & Rules Reference
+# Bumpuzzled — Design & Rules Reference
 
 ## Origin
 
@@ -62,7 +62,7 @@ python sim.py --fix   # solve levels.js, write each level's "sol"
 python verify.py      # full ship check (needs node)
 ```
 
-`index.html` also replays every level's `sol` at load and sets the tab title to `Stepfall (VERIFY FAIL)` if any fail.
+`index.html` also replays every level's `sol` at load and sets the tab title to `Bumpuzzled (VERIFY FAIL)` if any fail.
 
 ## Decisions log
 
@@ -75,5 +75,6 @@ python verify.py      # full ship check (needs node)
   - UI: tile art, move animations, intro card for each new tile, tap-a-tile explanations, legend, level select with stars, sound.
   - Service worker switched to network-first, so online players never run stale code.
 - 2026-10-14 (later): Owner playtest feedback: tiles you've stepped on should fall away. Made it the core rule: every tile falls when you leave it (cracked floor removed as redundant; levers, springs, pads and portals are now one-use). All 16 levels redesigned for it. Board rebuilt as a real 3D tilted plane (CSS 3D transforms): tiles are slabs, walls are blocks, fallen tiles drop into the void, bridges swing on a hinge, player is an upright ball with a shadow. Progress key bumped to `tilerush3`.
-- 2026-10-14: Renamed Tile Rush → **Stepfall** (several existing apps already use "Tile Rush"). Repo/URL slug and save key unchanged.
+- 2026-10-14: Renamed Tile Rush → Stepfall (several apps already use "Tile Rush") → **Bumpuzzled** (stepfall.com taken; owner's pick, from a reality-TV contestant's take on "bamboozled"). Repo/URL slug and save key unchanged.
+- 2026-10-15: Owner finished all 16 and asked for more + harder intros. Intro levels (1, 3, 5, 8, 11) rebuilt with 5–10 trap steps each (were 0–2). Added levels 17–32 ("Expert": 6×6/6×7 boards, par 16–26, 7–18 trap steps, mixed mechanics). Level-select section headings. Service worker now revalidates every file (`cache: no-cache`) so a new index.html can't run with a stale levels.js.
 - Planned (on hold — owner wants to think about it): level editor + share-by-URL (levels are small JSON, encode into the link hash).

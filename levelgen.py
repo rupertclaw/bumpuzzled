@@ -32,6 +32,7 @@ def palette(weights):
 # designer's and stays put. None = the whole board is free.
 FREE = None
 TEMPLATE = None
+CAP = 6000   # skip boards with more reachable states than this (too slow / unreadable)
 
 
 def random_grid(w, h, weights, rng):
@@ -95,7 +96,7 @@ def score(grid, need, par_lo, par_hi):
     if sim.check_grid(rows):
         return -1e9, None
     try:
-        s = sim.stats(rows, cap=6000)
+        s = sim.stats(rows, cap=CAP)
     except RuntimeError:
         return -1e9, None
     if s is None:
@@ -173,7 +174,9 @@ if __name__ == "__main__":
     ap.add_argument("--iters", type=int, default=1500)
     ap.add_argument("--seed", type=int, default=None)
     ap.add_argument("--template", help="grid file; ? cells are free, the rest is fixed")
+    ap.add_argument("--cap", type=int, default=6000, help="max reachable states per board")
     a = ap.parse_args()
+    CAP = a.cap
     w, h = map(int, a.size.lower().split("x"))
     if a.template:
         TEMPLATE = [l.replace(" ", "") for l in open(a.template).read().splitlines() if l.strip()]

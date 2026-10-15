@@ -1,8 +1,8 @@
-# Stepfall — Contributor Handover Brief
+# Bumpuzzled — Contributor Handover Brief
 
-**Game name:** Stepfall (renamed from Tile Rush on 2026-10-14; the repo and URL keep the old `tile-rush` slug so existing links and installs keep working)
-**Repo:** https://github.com/rupertclaw/tile-rush
-**Live site:** https://rupertclaw.github.io/tile-rush/ (GitHub Pages, branch `main`, root)
+**Game name:** Bumpuzzled (originally Tile Rush, briefly Stepfall, both 2026-10-14). The name comes from a reality-TV contestant mangling "bamboozled". Repo renamed `tile-rush` → `bumpuzzled` on 2026-10-15 (before the game was shared, so the old Pages URL dying didn't matter). The save key `tilerush3` was kept so progress survived. The owner is buying a custom domain; when it's set up, add a `CNAME` file and point DNS at GitHub Pages — note a new domain is a new origin, so installs and saved progress start fresh there.
+**Repo:** https://github.com/rupertclaw/bumpuzzled
+**Live site:** https://rupertclaw.github.io/bumpuzzled/ (GitHub Pages, branch `main`, root)
 **Updated:** 2026-10-14 (v2 rethink). Original brief: 2026-09-27 by Rupert.
 
 Assumes you can see the repo and nothing else. Rules live in DESIGN.md; this file is about how to work on it safely.
@@ -23,7 +23,7 @@ Owner preferences (constraints):
 - Owner is a vibe-coder: plain English, analogies over jargon, short reports.
 - `rupertclaw` GitHub account only. (A separate `MaplePulse` account exists for an unrelated project — don't mix them up.)
 
-Roadmap: 1) levels ✔ (v2), 2) **level editor + share-a-level-by-URL** (level JSON in the link hash, solver runs client-side to prove it's solvable), 3) further polish.
+Roadmap: 1) levels ✔ — 32 levels in two sections ("Learning the ropes" 1–16, "Expert" 17–32; a level object's optional `section` key starts a heading on the level-select screen), 2) level editor + share-by-URL — **on hold, owner wants to think about it** (felt too close to the inspiration game), 3) further polish.
 
 ## 2. Repo map
 
@@ -62,7 +62,7 @@ Grid limits: max 9×11, exactly one P and one E, portals in complete pairs. Keep
 
 GitHub Pages from `main` root; live ~60s after push. Quick check:
 ```
-curl -s https://rupertclaw.github.io/tile-rush/levels.js | head -5
+curl -s https://rupertclaw.github.io/bumpuzzled/levels.js | head -5
 ```
 The service worker is network-first (online players always get the latest files; offline players get the last cached copy). Still bump `CACHE` on every shipped change so old caches get cleared — verify.py fails if you forget.
 
@@ -70,7 +70,7 @@ No secrets, tokens or env vars anywhere — keep it that way.
 
 ## 6. Progress storage
 
-localStorage key `tilerush3` (bumped whenever the level set changes, so old progress is ignored; deliberately not renamed to `stepfall…` so players kept their progress through the rename): `{ stars: {levelIndex: 1-3}, best: {levelIndex: moves}, seen: [tile kinds whose intro card was shown], sound: bool }`. Level N unlocks when level N-1 has any stars.
+localStorage key `tilerush3` (bumped whenever the level set changes, so old progress is ignored; deliberately not renamed when the game was, so players keep their progress): `{ stars: {levelIndex: 1-3}, best: {levelIndex: moves}, seen: [tile kinds whose intro card was shown], sound: bool }`. Level N unlocks when level N-1 has any stars.
 
 ## 7. Pitfalls
 
@@ -79,7 +79,8 @@ localStorage key `tilerush3` (bumped whenever the level set changes, so old prog
 3. **Teleport/lever arrival semantics.** Effects trigger on *landing* (including after a spring or jump), once. Portals don't chain.
 4. **Tiles fall when you step off, not when you step on.** The entry portal is the exception: it falls as you warp through it.
 5. **3D rendering.** The board is a CSS-3D scene (`#scene`, `rotateX(--tilt)`); the player and upright sprites (star, lever) counter-rotate by the tilt to face the camera. If you change the tilt, change `TILT` in JS and `--tilt` in CSS together.
-6. **Phone height.** Board + D-pad must fit 375×667. Keep levels ≤7 rows where possible.
+6. **Stale files after a deploy.** GitHub Pages sends a 10-minute cache header. sw.js fetches with `cache: "no-cache"` so installed players always revalidate; a first-time visitor's browser can still briefly hold old files. When testing locally, hard-reload (or the browser keeps old `levels.js`).
+7. **Phone height.** Board + D-pad must fit 375×667. Keep levels ≤7 rows where possible.
 
 ## 8. Style for reports to the owner
 

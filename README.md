@@ -1,11 +1,11 @@
-# Stepfall
+# Bumpuzzled
 
 A grid-routing brain-teaser where every tile falls away behind you — so plan your whole route. Springs, jump pads, levers, drawbridges and portals; every level is proven solvable by a solver and has a par to beat.
 
 Browser PWA: no server, no build step, no dependencies, works offline, installs to your home screen.
 
-Live: https://rupertclaw.github.io/tile-rush/
-Repo: https://github.com/rupertclaw/tile-rush
+Live: https://rupertclaw.github.io/bumpuzzled/
+Repo: https://github.com/rupertclaw/bumpuzzled
 
 Inspired by classic tile-routing puzzle games. All code, art, sound and levels are original.
 

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
-<title>Stepfall</title>
+<title>Bumpuzzled</title>
 <meta name="theme-color" content="#0e0f24">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
@@ -32,11 +32,13 @@ button { font: inherit; color: inherit; border: none; background: none; cursor: 
 
 /* ---------- level select ---------- */
 #home { overflow-y: auto; touch-action: pan-y; }
-.logo { margin: 28px 0 4px; font-size: 2.3rem; font-weight: 900; letter-spacing: 4px;
+.logo { margin: 28px 0 4px; font-size: clamp(1.5rem, 9vw, 2.3rem); font-weight: 900; letter-spacing: clamp(2px, 1vw, 4px); white-space: nowrap;
   background: linear-gradient(180deg, #fff3c4, var(--gold) 55%, var(--gold-lo));
   -webkit-background-clip: text; background-clip: text; color: transparent; }
 .tag { color: var(--dim); font-size: .95rem; margin-bottom: 22px; text-align: center; }
 #levelgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 100%; max-width: 380px; }
+.section { grid-column: 1 / -1; margin: 10px 0 0; color: var(--gold); font-size: .78rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
+.section:first-child { margin-top: 0; }
 .lvbtn { aspect-ratio: 1; border-radius: 14px; background: linear-gradient(180deg, #2a2e66, var(--panel));
   border: 1px solid var(--line); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
   font-size: 1.3rem; font-weight: 800; box-shadow: 0 5px 0 #0b0c20; }
@@ -174,7 +176,7 @@ button { font: inherit; color: inherit; border: none; background: none; cursor: 
 <body>
 
 <section id="home" class="screen">
-  <div class="logo">STEPFALL</div>
+  <div class="logo">BUMPUZZLED</div>
   <div class="tag">Every step is one-way. Think first.</div>
   <div id="levelgrid"></div>
   <div class="homefoot">
@@ -336,6 +338,12 @@ function showHome() {
   grid.innerHTML = "";
   let nextMarked = false;
   LEVELS.forEach((L, i) => {
+    if (L.section) {
+      const h = document.createElement("div");
+      h.className = "section";
+      h.textContent = L.section;
+      grid.appendChild(h);
+    }
     const b = document.createElement("button");
     const s = save.stars[i] || 0;
     const open = isUnlocked(i);
@@ -778,7 +786,7 @@ addEventListener("resize", () => {
 // announces itself in the tab title and the console.
 (function verifyAll() {
   const fails = LEVELS.map((L, i) => replay(L.grid, L.sol) ? null : i + 1).filter(Boolean);
-  if (fails.length) { console.error("VERIFY FAIL: levels", fails); document.title = "Stepfall (VERIFY FAIL)"; }
+  if (fails.length) { console.error("VERIFY FAIL: levels", fails); document.title = "Bumpuzzled (VERIFY FAIL)"; }
   else console.log(`VERIFY OK: all ${LEVELS.length} levels solve through the game engine`);
 })();
 

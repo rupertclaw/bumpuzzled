@@ -1,6 +1,6 @@
 {
-  "name": "Stepfall",
-  "short_name": "Stepfall",
+  "name": "Bumpuzzled",
+  "short_name": "Bumpuzzled",
   "description": "A brain-teaser puzzle game. Every tile falls away behind you. Springs, jump pads, levers and portals. Works offline.",
   "start_url": "./index.html",
   "display": "standalone",
