@@ -1,8 +1,8 @@
 # Bumpuzzled — Contributor Handover Brief
 
-**Game name:** Bumpuzzled (originally Tile Rush, briefly Stepfall, both 2026-10-14). The name comes from a reality-TV contestant mangling "bamboozled". Repo renamed `tile-rush` → `bumpuzzled` on 2026-10-15 (before the game was shared, so the old Pages URL dying didn't matter). The save key `tilerush3` was kept so progress survived. The owner is buying a custom domain; when it's set up, add a `CNAME` file and point DNS at GitHub Pages — note a new domain is a new origin, so installs and saved progress start fresh there.
+**Game name:** Bumpuzzled (originally Tile Rush, briefly Stepfall, both 2026-10-14). The name comes from a reality-TV contestant mangling "bamboozled". Repo renamed `tile-rush` → `bumpuzzled` on 2026-10-15 (before the game was shared, so the old Pages URL dying didn't matter). The save key `tilerush3` was kept so progress survived. Custom domain bumpuzzled.com (Namecheap) connected 2026-10-15 — a new origin, so installs and saved progress started fresh there.
 **Repo:** https://github.com/rupertclaw/bumpuzzled
-**Live site:** https://rupertclaw.github.io/bumpuzzled/ (GitHub Pages, branch `main`, root)
+**Live site:** https://bumpuzzled.com (GitHub Pages, branch `main`, root; custom domain via the `CNAME` file — don't delete it. DNS is at Namecheap: 4 A records for `@` → 185.199.108–111.153, `www` CNAME → rupertclaw.github.io. The old github.io address redirects here.)
 **Updated:** 2026-10-14 (v2 rethink). Original brief: 2026-09-27 by Rupert.
 
 Assumes you can see the repo and nothing else. Rules live in DESIGN.md; this file is about how to work on it safely.
@@ -62,7 +62,7 @@ Grid limits: max 9×11, exactly one P and one E, portals in complete pairs. Keep
 
 GitHub Pages from `main` root; live ~60s after push. Quick check:
 ```
-curl -s https://rupertclaw.github.io/bumpuzzled/levels.js | head -5
+curl -s https://bumpuzzled.com/levels.js | head -5
 ```
 The service worker is network-first (online players always get the latest files; offline players get the last cached copy). Still bump `CACHE` on every shipped change so old caches get cleared — verify.py fails if you forget.
 

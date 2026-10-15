@@ -4,7 +4,7 @@ A grid-routing brain-teaser where every tile falls away behind you — so plan y
 
 Browser PWA: no server, no build step, no dependencies, works offline, installs to your home screen.
 
-Live: https://rupertclaw.github.io/bumpuzzled/
+Live: https://bumpuzzled.com
 Repo: https://github.com/rupertclaw/bumpuzzled
 
 Inspired by classic tile-routing puzzle games. All code, art, sound and levels are original.
