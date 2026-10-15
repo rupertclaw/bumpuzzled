@@ -1,6 +1,6 @@
 // Bump CACHE whenever any shipped file changes, or returning players keep
 // running the old version. verify.py checks this against origin/main.
-const CACHE = "bumpuzzled-v8";
+const CACHE = "bumpuzzled-v9";
 const ASSETS = ["./", "./index.html", "./game-core.js", "./levels.js", "./manifest.webmanifest", "./icon.svg"];
 
 self.addEventListener("install", e => {
