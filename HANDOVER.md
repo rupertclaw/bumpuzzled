@@ -23,7 +23,7 @@ Owner preferences (constraints):
 - Owner is a vibe-coder: plain English, analogies over jargon, short reports.
 - `rupertclaw` GitHub account only. (A separate `MaplePulse` account exists for an unrelated project — don't mix them up.)
 
-Roadmap: 1) levels ✔ — 32 levels in two sections ("Learning the ropes" 1–16, "Expert" 17–32; a level object's optional `section` key starts a heading on the level-select screen), 2) level editor + share-by-URL — **on hold, owner wants to think about it** (felt too close to the inspiration game), 3) further polish.
+Roadmap: 1) levels ✔ — 32 levels in two sections ("Learning the ropes" 1–16, "Expert" 17–32; a level object's optional `section` key starts a heading on the level-select screen), 2) level editor + share-by-URL — **on hold, owner wants to think about it** (felt too close to the inspiration game), 3) further polish, 4) monetisation — owner's plan: pack 1 free, later packs $1.99 each, plus a one-time all-access pass (suggested $4.99 rising toward $9.99). Owner has a Stripe account but wants users first. Paid unlocks need either an app-store build or a small server (the static web version can't enforce a paywall). **Packs 3 "Master" (33–48) and 4 "Grandmaster" (49–64) are already built** and live only on the owner's PC, on the local git branch `packs-3-4` — never push that branch: this repo is public, so anything pushed is free to download.
 
 ## 2. Repo map
 
