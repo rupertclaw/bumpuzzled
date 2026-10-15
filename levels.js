@@ -206,18 +206,18 @@ const LEVELS = /*BEGIN*/[
  },
  {
   "section": "Expert",
-  "name": "Long Haul",
-  "hint": "A bigger board. Same rule: no going back.",
+  "name": "Deep End",
+  "hint": "Welcome to Expert. Springs, bridges, and nowhere to hide.",
   "grid": [
-   "...#E.",
-   ".#...#",
-   ".#..#P",
-   "..#.#.",
-   ".#.#..",
-   "......",
-   "..#.#."
+   ".#.JH.",
+   "TH.HS.",
+   ".B..B.",
+   "S...P.",
+   ".##SHS",
+   "#.#S..",
+   "E.SB.."
   ],
-  "sol": "DDDLLLLLUUUUURRDRRU"
+  "sol": "LLUUURRDLLDRDLRDLDDLLL"
  },
  {
   "name": "Spring Fever",

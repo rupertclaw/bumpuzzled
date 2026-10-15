@@ -81,6 +81,11 @@ Measurement ID `G-R35C5BTKY6` (a public ID, not a secret). Code is the "analytic
 - Events: `app_open {display_mode}`, `app_installed`, `level_start {level_number, level_name}`, `level_complete {level_number, level_name, moves, par, stars, first_clear}`, `level_restart {level_number, moves}`, `level_quit {level_number, moves}`, `share {method, level_number}`. User property `display_mode` = installed | browser (installed = launched from the home-screen icon; works on iPhone, unlike `app_installed` which only Android/desktop Chrome fire).
 - Any new tracking must be added to the Privacy card text too.
 
+## 6c. Sharing
+
+- **Share button** (win card): draws a 1080×1350 JPEG of the result on a canvas (`makeShareCanvas` / `drawBoard` in index.html — logo, level layout, stars, moves vs par, "bumpuzzled.com") and passes it to the phone's share sheet. Facebook ignores any pre-filled text, so the image is what carries the result. The image is prepared when the win card opens, because iPhones reject a share that waits on work. Fallbacks: text share sheet → clipboard + "Save image" link.
+- **Link previews**: Open Graph / Twitter tags in index.html's `<head>` point at `og-image.jpg` (1200×630). It was rendered in the browser from the same `drawBoard` code (level 16 board). If you change it, Facebook caches previews — refresh via Facebook's Sharing Debugger.
+
 ## 7. Pitfalls
 
 1. **Editing rules in one engine only.** verify.py will catch it — run it.

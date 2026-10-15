@@ -7,6 +7,18 @@
 <meta name="theme-color" content="#0e0f24">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
+<meta name="description" content="A free brain-teaser puzzle game. Every tile falls away behind you, so plan your whole route. Springs, jump pads, levers and portals. Plays in your browser, works offline.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Bumpuzzled">
+<meta property="og:url" content="https://bumpuzzled.com/">
+<meta property="og:title" content="Bumpuzzled: every step is one-way">
+<meta property="og:description" content="A free brain-teaser puzzle game. Every tile falls away behind you, so plan your whole route. Plays in your browser, works offline.">
+<meta property="og:image" content="https://bumpuzzled.com/og-image.jpg">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Bumpuzzled: a 3D tile puzzle board with a smiling yellow ball">
+<meta name="twitter:card" content="summary_large_image">
 <style>
 :root {
   --bg: #0e0f24; --bg2: #1a1c3a; --panel: #1d2045; --line: #2c3068;
@@ -789,7 +801,9 @@ function win() {
       </div>
       <div class="shared" id="cardShared"></div>`);
     $("cardRetry").onclick = restart;
-    $("cardShare").onclick = () => shareResult(li, moves, par, stars);
+    let shareFile = null;
+    makeShareFile(li, moves, par, stars).then(f => { shareFile = f; });
+    $("cardShare").onclick = () => shareResult(li, moves, par, stars, shareFile);
     $("cardNext").onclick = () => { closeCard(); last ? showHome() : startLevel(li + 1); };
   }, 750);
 }
@@ -798,22 +812,177 @@ function win() {
 function openCard(html) { $("card").innerHTML = html; $("veil").classList.add("on"); }
 function closeCard() { $("veil").classList.remove("on"); }
 
-// Share a spoiler-free result: native share sheet on phones, clipboard elsewhere.
+// ------------------------------------------------------------ share image
+// A picture of the result (level layout, stars, moves vs par, link) drawn on a
+// canvas. Apps like Facebook drop any text a game pre-fills, but keep images.
+function rr(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+function starPath(ctx, cx, cy, R) {
+  ctx.beginPath();
+  for (let k = 0; k < 10; k++) {
+    const a = -Math.PI / 2 + k * Math.PI / 5, rad = k % 2 ? R * .45 : R;
+    ctx.lineTo(cx + rad * Math.cos(a), cy + rad * Math.sin(a));
+  }
+  ctx.closePath();
+}
+function drawBall(ctx, cx, cy, R) {
+  ctx.fillStyle = "rgba(0,0,0,.35)";
+  ctx.beginPath(); ctx.ellipse(cx, cy + R * .95, R * .75, R * .25, 0, 0, Math.PI * 2); ctx.fill();
+  const g = ctx.createRadialGradient(cx - R * .3, cy - R * .4, R * .1, cx, cy, R * 1.1);
+  g.addColorStop(0, "#fff1b8"); g.addColorStop(.5, "#ffcf5a"); g.addColorStop(1, "#c98f1c");
+  ctx.fillStyle = g;
+  ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = "#2a1a00";
+  for (const ex of [-.34, .34]) { ctx.beginPath(); ctx.ellipse(cx + ex * R, cy - R * .12, R * .17, R * .23, 0, 0, Math.PI * 2); ctx.fill(); }
+  ctx.fillStyle = "#fff";
+  for (const ex of [-.29, .39]) { ctx.beginPath(); ctx.arc(cx + ex * R, cy - R * .2, R * .06, 0, Math.PI * 2); ctx.fill(); }
+}
+// The level as it starts: flat slabs with a front edge, same colours as the game.
+function drawBoard(ctx, grid, x0, y0, cell) {
+  const s = Math.round(cell * .9), ed = Math.max(3, Math.round(s * .14)), rad = Math.round(s * .14);
+  let start = null;
+  grid.forEach((row, r) => [...row].forEach((ch, c) => {
+    const x = x0 + c * cell, y = y0 + r * cell, cx = x + s / 2, cy = y + s / 2;
+    if (ch === "H" || ch === "B") {
+      ctx.fillStyle = "rgba(3,3,14,.8)"; rr(ctx, x, y + ed / 2, s, s, rad); ctx.fill();
+      if (ch === "B") { ctx.fillStyle = "#523f7a"; ctx.fillRect(x + rad, y + ed / 2, s - 2 * rad, ed * .8); }
+      return;
+    }
+    const wall = ch === "#";
+    const [top, top2, edge] = wall ? ["#8c88a4", "#5d5a6e", "#2a2833"]
+      : ch === "E" ? ["#8af0b0", "#3fb872", "#1b5a35"]
+      : ch === "T" ? ["#7a68bd", "#4b3f86", "#2a2450"]
+      : ch === "b" ? ["#9a7dd0", "#7a5fb0", "#523f7a"]
+      : ["#5b63b8", "#4a51a0", "#262a5c"];
+    const lift = wall ? ed : 0;
+    ctx.fillStyle = edge; rr(ctx, x, y + ed - lift, s, s + lift, rad); ctx.fill();
+    const g = ctx.createLinearGradient(x, y - lift, x + s, y + s - lift);
+    g.addColorStop(0, top); g.addColorStop(1, top2);
+    ctx.fillStyle = g; rr(ctx, x, y - lift, s, s, rad); ctx.fill();
+    const ty = cy - lift;
+    ctx.lineCap = "round"; ctx.lineJoin = "round";
+    if (wall) {
+      ctx.strokeStyle = "rgba(0,0,0,.28)"; ctx.lineWidth = Math.max(1.5, s * .03);
+      ctx.beginPath();
+      ctx.moveTo(x + s * .08, y - lift + s / 3); ctx.lineTo(x + s * .92, y - lift + s / 3);
+      ctx.moveTo(x + s * .08, y - lift + 2 * s / 3); ctx.lineTo(x + s * .92, y - lift + 2 * s / 3);
+      ctx.moveTo(cx, y - lift + s * .08); ctx.lineTo(cx, y - lift + s / 3);
+      ctx.moveTo(x + s * .3, y - lift + s / 3); ctx.lineTo(x + s * .3, y - lift + 2 * s / 3);
+      ctx.moveTo(x + s * .7, y - lift + s / 3); ctx.lineTo(x + s * .7, y - lift + 2 * s / 3);
+      ctx.moveTo(cx, y - lift + 2 * s / 3); ctx.lineTo(cx, y - lift + s * .92);
+      ctx.stroke();
+    } else if (ch === "J") {
+      ctx.strokeStyle = "#59d8ff"; ctx.lineWidth = s * .08;
+      for (const dy of [-.08, .14]) {
+        ctx.beginPath(); ctx.moveTo(cx - s * .17, ty + s * dy + s * .08); ctx.lineTo(cx, ty + s * dy - s * .09);
+        ctx.lineTo(cx + s * .17, ty + s * dy + s * .08); ctx.stroke();
+      }
+    } else if (ch === "S") {
+      ctx.strokeStyle = "#ff9f43"; ctx.lineWidth = s * .07;
+      ctx.beginPath();
+      ctx.moveTo(cx - s * .24, ty - s * .26); ctx.lineTo(cx + s * .24, ty - s * .26);
+      for (let k = 0; k < 3; k++) { ctx.moveTo(cx - s * .2, ty - s * .1 + k * s * .13); ctx.lineTo(cx + s * .2, ty - s * .17 + k * s * .13); }
+      ctx.moveTo(cx - s * .24, ty + s * .27); ctx.lineTo(cx + s * .24, ty + s * .27);
+      ctx.stroke();
+    } else if (ch === "T") {
+      ctx.strokeStyle = "#e8e8f0"; ctx.lineWidth = s * .07;
+      ctx.beginPath(); ctx.moveTo(cx, ty + s * .22); ctx.lineTo(cx + s * .16, ty - s * .2); ctx.stroke();
+      ctx.fillStyle = "#b48cff"; ctx.beginPath(); ctx.arc(cx + s * .16, ty - s * .22, s * .1, 0, Math.PI * 2); ctx.fill();
+    } else if (ch === "b") {
+      ctx.strokeStyle = "rgba(0,0,0,.25)"; ctx.lineWidth = Math.max(1.5, s * .03);
+      ctx.beginPath();
+      for (const fx of [.33, .66]) { ctx.moveTo(x + s * fx, y + s * .1); ctx.lineTo(x + s * fx, y + s * .9); }
+      ctx.stroke();
+    } else if ("1234".includes(ch)) {
+      ctx.strokeStyle = "12".includes(ch) ? "#34e3c0" : "#ff6fae"; ctx.lineWidth = s * .07;
+      ctx.beginPath(); ctx.arc(cx, ty, s * .3, -.3, Math.PI * 1.2); ctx.stroke();
+      ctx.beginPath(); ctx.arc(cx, ty, s * .15, Math.PI * .7, Math.PI * 2.2); ctx.stroke();
+    } else if (ch === "E") {
+      ctx.fillStyle = "#e9fff1"; starPath(ctx, cx, ty, s * .3); ctx.fill();
+    } else if (ch === "P") start = [cx, ty];
+  }));
+  if (start) drawBall(ctx, start[0], start[1] - s * .08, s * .34);
+}
+
+function makeShareCanvas(i, moves, par, stars) {
+  const W = 1080, H = 1350;
+  const cv = document.createElement("canvas");
+  cv.width = W; cv.height = H;
+  const ctx = cv.getContext("2d");
+  const font = (w, px) => `${w} ${px}px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif`;
+  const bg = ctx.createRadialGradient(W / 2, H * .35, 50, W / 2, H * .45, H * .9);
+  bg.addColorStop(0, "#2c3170"); bg.addColorStop(.55, "#15173a"); bg.addColorStop(1, "#0b0c1f");
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+  ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
+  // logo
+  if ("letterSpacing" in ctx) ctx.letterSpacing = "8px";
+  ctx.font = font(900, 104);
+  const lg = ctx.createLinearGradient(0, 70, 0, 175);
+  lg.addColorStop(0, "#fff3c4"); lg.addColorStop(.55, "#ffcf5a"); lg.addColorStop(1, "#c98f1c");
+  ctx.fillStyle = lg; ctx.fillText("BUMPUZZLED", W / 2, 165);
+  if ("letterSpacing" in ctx) ctx.letterSpacing = "3px";
+  ctx.font = font(700, 40); ctx.fillStyle = "#9196cc";
+  ctx.fillText(`LEVEL ${i + 1}  ·  ${LEVELS[i].name.toUpperCase()}`, W / 2, 240);
+  if ("letterSpacing" in ctx) ctx.letterSpacing = "0px";
+  // board
+  const g = LEVELS[i].grid, bw = 860, bh = 600;
+  const cell = Math.floor(Math.min(bw / g[0].length, bh / g.length, 150));
+  drawBoard(ctx, g, (W - cell * g[0].length) / 2, 300 + (bh - cell * g.length) / 2, cell);
+  // stars
+  for (let k = 0; k < 3; k++) {
+    const sx = W / 2 + (k - 1) * 150, sy = 1040;
+    starPath(ctx, sx, sy, 62);
+    ctx.fillStyle = k < stars ? "#ffcf5a" : "#3a3f78"; ctx.fill();
+    if (k < stars) { ctx.strokeStyle = "#c98f1c"; ctx.lineWidth = 4; ctx.stroke(); }
+  }
+  ctx.font = font(800, 56); ctx.fillStyle = "#eef0ff";
+  ctx.fillText(`${moves} moves  ·  par ${par}`, W / 2, 1170);
+  ctx.font = font(700, 44); ctx.fillStyle = "#ffcf5a";
+  ctx.fillText("Can you beat it?  bumpuzzled.com", W / 2, 1265);
+  return cv;
+}
+function makeShareFile(i, moves, par, stars) {
+  return new Promise(resolve => {
+    try {
+      makeShareCanvas(i, moves, par, stars).toBlob(b =>
+        resolve(b ? new File([b], `bumpuzzled-level-${i + 1}.jpg`, { type: "image/jpeg" }) : null), "image/jpeg", .92);
+    } catch (e) { resolve(null); }
+  });
+}
+
+// Share: a picture through the phone's share sheet when possible; otherwise
+// the text version via the share sheet or the clipboard (plus a Save image link).
 const SHARE_URL = "https://bumpuzzled.com";
-async function shareResult(i, moves, par, stars) {
-  const text = `Bumpuzzled 🧩 Level ${i + 1} · ${LEVELS[i].name}
-` +
-    `${"⭐".repeat(stars)}${"☆".repeat(3 - stars)} ${moves} moves (par ${par})
-` +
+async function shareResult(i, moves, par, stars, file) {
+  const text = `Bumpuzzled 🧩 Level ${i + 1} · ${LEVELS[i].name}\n` +
+    `${"⭐".repeat(stars)}${"☆".repeat(3 - stars)} ${moves} moves (par ${par})\n` +
     `Can you beat it? ${SHARE_URL}`;
   const note = $("cardShared");
+  if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+    try { await navigator.share({ files: [file], text, title: "Bumpuzzled" }); track("share", { method: "image", level_number: i + 1 }); return; }
+    catch (e) { if (e && e.name === "AbortError") return; }
+  }
   if (navigator.share) {
     try { await navigator.share({ text }); track("share", { method: "native", level_number: i + 1 }); return; }
     catch (e) { if (e && e.name === "AbortError") return; }
   }
+  const saveLink = () => {
+    if (!file) return;
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(file); a.download = file.name; a.textContent = "Save image";
+    a.style.color = "var(--gold)";
+    a.onclick = () => track("share", { method: "download", level_number: i + 1 });
+    note.append(" · ", a);
+  };
   try {
     await navigator.clipboard.writeText(text);
     note.textContent = "Copied! Paste it anywhere.";
+    saveLink();
     track("share", { method: "clipboard", level_number: i + 1 });
   } catch (e) {
     // last resort: show the text so it can be copied by hand
@@ -821,6 +990,7 @@ async function shareResult(i, moves, par, stars) {
     const ta = document.createElement("textarea");
     ta.value = text; ta.readOnly = true; ta.rows = 4;
     note.appendChild(ta); ta.select();
+    saveLink();
   }
 }
 
