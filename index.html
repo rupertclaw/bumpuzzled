@@ -8,12 +8,12 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<meta name="description" content="A free brain-teaser puzzle game. Every tile falls away behind you, so plan your whole route. Springs, jump pads, levers and portals. Plays in your browser, works offline.">
+<meta name="description" content="A free brain-teaser puzzle game. Every tile falls away behind you, so plan your whole route. Springs, jump pads, levers and portals. Play in your browser or install it on your phone. Works offline.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Bumpuzzled">
 <meta property="og:url" content="https://bumpuzzled.com/">
 <meta property="og:title" content="Bumpuzzled: every step is one-way">
-<meta property="og:description" content="A free brain-teaser puzzle game. Every tile falls away behind you, so plan your whole route. Plays in your browser, works offline.">
+<meta property="og:description" content="A free brain-teaser puzzle game. Every tile falls away behind you, so plan your whole route. Play in your browser or install it on your phone. Works offline.">
 <meta property="og:image" content="https://bumpuzzled.com/og-image.jpg">
 <meta property="og:image:type" content="image/jpeg">
 <meta property="og:image:width" content="1200">
@@ -495,15 +495,29 @@ $("howbtn").onclick = () => showHowTo();
 // ------------------------------------------------------------ install
 // Android/desktop Chrome: hold the browser's install prompt and fire it from
 // our button. iPhone (no prompt API) and other phones: show instructions.
-let installPrompt = null, justInstalled = false;
+// The button hides once we know the app is installed: running installed, an
+// install through the button, Chrome's getInstalledRelatedApps (Android), or
+// the remembered save.installed. A fresh install prompt means Chrome knows it
+// is NOT installed (e.g. uninstalled since), so the button comes back.
+let installPrompt = null;
 const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) ||
   (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 const isMobile = isIOS || /android/i.test(navigator.userAgent);
 function updateInstallBtn() {
-  $("installbtn").style.display = !isInstalled() && !justInstalled && (installPrompt || isMobile) ? "" : "none";
+  const show = !isInstalled() && (installPrompt || (isMobile && !save.installed));
+  $("installbtn").style.display = show ? "" : "none";
 }
-addEventListener("beforeinstallprompt", e => { e.preventDefault(); installPrompt = e; updateInstallBtn(); });
-addEventListener("appinstalled", () => { installPrompt = null; justInstalled = true; updateInstallBtn(); });
+function markInstalled() { installPrompt = null; if (!save.installed) { save.installed = true; persist(); } updateInstallBtn(); }
+addEventListener("beforeinstallprompt", e => {
+  e.preventDefault(); installPrompt = e;
+  if (save.installed) { save.installed = false; persist(); }
+  updateInstallBtn();
+});
+addEventListener("appinstalled", markInstalled);
+if (isInstalled()) markInstalled();
+if (navigator.getInstalledRelatedApps) {
+  navigator.getInstalledRelatedApps().then(apps => { if (apps.length) markInstalled(); }).catch(() => {});
+}
 $("installbtn").onclick = async () => {
   if (installPrompt) {
     const p = installPrompt;
@@ -512,7 +526,7 @@ $("installbtn").onclick = async () => {
     try {
       const r = await p.userChoice;
       track("install_prompt_result", { outcome: r.outcome });
-      if (r.outcome === "accepted") { installPrompt = null; justInstalled = true; updateInstallBtn(); }
+      if (r.outcome === "accepted") markInstalled();
     } catch (e) {}
     return;
   }

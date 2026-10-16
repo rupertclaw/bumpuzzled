@@ -226,6 +226,8 @@ def stats(grid, cap=400_000):
     traps    : moves from a winnable state into a dead one (irreversible mistakes)
     path_traps: how many steps along the par path offer a trap move
     optimal  : how many different shortest solutions exist (fewer = tighter)
+    safe     : along the par route, average number of moves that keep the
+               level winnable (1.00 = only ever one safe move; higher = forgiving)
     """
     lv = Level(grid)
     order, edges = explore(lv, cap)
@@ -277,13 +279,16 @@ def stats(grid, cap=400_000):
     sol = solve(grid)
     st = s0
     path_traps = 0
+    safe_total = 0
     for d in sol:
         if any(isinstance(ns, tuple) and ns not in good for _, ns in edges[st]):
             path_traps += 1
+        safe_total += sum(1 for _, ns in edges[st] if ns == "WIN" or (isinstance(ns, tuple) and ns in good))
         res = step(lv, st, d)
         st = res[1]
     return {"states": len(order), "par": best, "dead": dead, "traps": traps,
-            "path_traps": path_traps, "optimal": best_ways, "sol": sol}
+            "path_traps": path_traps, "optimal": best_ways, "sol": sol,
+            "safe": round(safe_total / len(sol), 3), "winnable": len(good)}
 
 
 def check_grid(grid):
@@ -330,7 +335,7 @@ if __name__ == "__main__":
             continue
         print(f"L{n:<2} {name:<18} par={s['par']:<3} states={s['states']:<6} "
               f"traps={s['traps']:<4} on-path={s['path_traps']:<3} "
-              f"optimal={s['optimal']:<4} {s['sol']}")
+              f"optimal={s['optimal']:<4} safe={s['safe']:.2f} {s['sol']}")
         if lvl.get("sol") != s["sol"]:
             if fix:
                 lvl["sol"] = s["sol"]

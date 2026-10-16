@@ -473,17 +473,17 @@ const LEVELS = /*BEGIN*/[
  },
  {
   "name": "Frog Pond",
-  "hint": "Pads everywhere. Not all of them help.",
+  "hint": "Pads everywhere. Pick the wrong one and you're sunk.",
   "grid": [
-   "#...JE",
-   ".#J.H#",
-   "JH.#..",
-   "J#.#P.",
-   ".JH.#.",
-   "..#...",
-   "#..J#."
+   "P.....",
+   ".#.HJ#",
+   "#.H...",
+   "#.JHJ#",
+   "..##..",
+   "#.#E#.",
+   "..J..#"
   ],
-  "sol": "RDDLLDLLUULUURUURRR"
+  "sol": "RRRRDDDLLDDDRRU"
  },
  {
   "name": "Juggler",

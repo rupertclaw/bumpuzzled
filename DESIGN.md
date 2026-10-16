@@ -48,6 +48,7 @@ Every tile you leave — floor, start, spring, jump pad, lever, bridge, portal �
   - `traps` — moves that put you in a state you can never win from (you must undo)
   - `on-path` — how many steps of the par route offer such a trap move. This is the best single "how hard does this feel" number.
   - `optimal` — how many different shortest solutions exist (1 = tight)
+  - `safe` — along the par route, the average number of moves that keep the level winnable. **1.00 means only one safe move every step; ~1.15+ feels easy even with lots of traps** (owner found Frog Pond, safe 1.16 / 4 optimal routes, too easy). Aim for ≤ 1.08 and optimal ≤ 2 on puzzle levels.
 - `levelgen.py` is a sketchpad for finding hard layouts: give it a template (`?` = free cell) and the tiles to use; it hill-climbs for traps and strips clutter. Its output always needs a human pass for readability.
 - Mobile limit: max 9 wide × 11 tall (enforced by `sim.check_grid`). 5–7 wide plays best.
 

@@ -115,6 +115,7 @@ def score(grid, need, par_lo, par_hi):
          + (par - manhattan) * 0.5
          + math.log2(s["states"]) * 0.5
          - math.log2(s["optimal"]) * 2
+         - (s["safe"] - 1) * 60          # forgiving boards (many safe moves) feel easy
          - missing * 25
          - specials * 0.3)
     return v, s
@@ -194,6 +195,6 @@ if __name__ == "__main__":
     for v, g in results:
         s = sim.stats(g)
         print(f"score={v:.1f} par={s['par']} traps-on-path={s['path_traps']} "
-              f"optimal={s['optimal']} states={s['states']} sol={s['sol']}")
+              f"optimal={s['optimal']} safe={s['safe']:.2f} states={s['states']} sol={s['sol']}")
         print("\n".join("   " + r for r in g))
         print()
