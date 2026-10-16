@@ -221,16 +221,16 @@ const LEVELS = /*BEGIN*/[
  },
  {
   "name": "Spring Fever",
-  "hint": "Count the gaps before you jump.",
+  "hint": "Springs everywhere. Every launch is a one-way ticket.",
   "grid": [
-   "S..P..",
-   ".#.##.",
-   ".S#..#",
-   ".HJ.#.",
-   "SH..H.",
-   "...#ES"
+   ".#SP..",
+   ".S.H.#",
+   "S#.#H.",
+   "..HES.",
+   "SHH##.",
+   "SJS..."
   ],
-  "sol": "LLLDDRDRURULLDRDL"
+  "sol": "LDLLDDDDRRRRRUULL"
  },
  {
   "name": "Hopscotch",
@@ -417,6 +417,451 @@ const LEVELS = /*BEGIN*/[
    "..T..#"
   ],
   "sol": "DLDLLULLDDDDRRRUULLUURDRDD"
+ },
+ {
+  "section": "Master",
+  "name": "Pinball",
+  "hint": "Springs, pads and a portal. Every one is single use.",
+  "grid": [
+   "..#..#",
+   "..#.#E",
+   "SJH.HJ",
+   "..1..H",
+   ".2J.P.",
+   "......"
+  ],
+  "sol": "DLLLULURDDLLUURU"
+ },
+ {
+  "name": "Twin Gates",
+  "hint": "Two portal pairs. One order works.",
+  "grid": [
+   "SHJ..#",
+   "E##SH.",
+   "#.4J#3",
+   "...#J.",
+   ".S.H..",
+   "P.#..#"
+  ],
+  "sol": "UURRDLRURURUULLD"
+ },
+ {
+  "name": "Leverage",
+  "hint": "The lever's on the way. Is the bridge?",
+  "grid": [
+   "..#TBJ",
+   "....#P",
+   "T...#.",
+   ".HSBS#",
+   "#.#J..",
+   "Eb.S#."
+  ],
+  "sol": "ULDLLLDRRDRDLDLLL"
+ },
+ {
+  "name": "Tightrope",
+  "hint": "One wrong step and the floor is gone.",
+  "grid": [
+   "STJb..",
+   ".T##..",
+   "...P.#",
+   ".#....",
+   "#EH#..",
+   "..JSB."
+  ],
+  "sol": "LLLUURRRDDDDDLLLU"
+ },
+ {
+  "name": "Frog Pond",
+  "hint": "Pads everywhere. Not all of them help.",
+  "grid": [
+   "#...JE",
+   ".#J.H#",
+   "JH.#..",
+   "J#.#P.",
+   ".JH.#.",
+   "..#...",
+   "#..J#."
+  ],
+  "sol": "RDDLLDLLUULUURUURRR"
+ },
+ {
+  "name": "Juggler",
+  "hint": "Levers, springs and pads, all at once.",
+  "grid": [
+   "...Sb.",
+   "#E##S#",
+   ".HJH.T",
+   "T.T.H.",
+   "T....P",
+   "T..#.."
+  ],
+  "sol": "LLLDLLUURRURUULLLD"
+ },
+ {
+  "name": "Trampoline Park",
+  "hint": "Bigger board, bigger bounces.",
+  "grid": [
+   "..#.#..",
+   ".P#EHJ#",
+   "J#.#.H.",
+   ".#.#H..",
+   "S.....J",
+   "..#.SHS",
+   "..#..S#"
+  ],
+  "sol": "LDDDRRRRRURDDLDRUL"
+ },
+ {
+  "name": "Detour",
+  "hint": "The direct route is a trap.",
+  "grid": [
+   ".#.HJT",
+   ".S..2.",
+   "..#H..",
+   "#B.S#.",
+   ".b1S.#",
+   "T.#B..",
+   "..P.#E"
+  ],
+  "sol": "LUURRULLDLDDRRDDRRD"
+ },
+ {
+  "name": "Rabbit Hole",
+  "hint": "Where does that portal really lead?",
+  "grid": [
+   "E#.#..",
+   "BSH.#.",
+   "PSJ...",
+   "..##T.",
+   "#.2.Tb",
+   "..1#..",
+   ".TbJ.."
+  ],
+  "sol": "DRDRDRRURUULULLLULU"
+ },
+ {
+  "name": "Bounce House",
+  "hint": "Springs land on the first tile still standing. Plan for it.",
+  "grid": [
+   "ES....S",
+   "#H.#.#S",
+   "..#.#.H",
+   "..P.#..",
+   ".#..#..",
+   "..S.H.S",
+   "..#..#."
+  ],
+  "sol": "DRDLRUURDDUULLLLLL"
+ },
+ {
+  "name": "Long Shot",
+  "hint": "Fly far, land right.",
+  "grid": [
+   "SH..S.",
+   ".#...#",
+   "SH.#P.",
+   ".S2##.",
+   ".H...H",
+   "#.S.H.",
+   ".1.#ES"
+  ],
+  "sol": "ULLURRLDDDRDDDRDLRDL"
+ },
+ {
+  "name": "Moat",
+  "hint": "Bridges across, bridges down. Pick your moment.",
+  "grid": [
+   "...HSS",
+   "P.#..T",
+   "...B.b",
+   "TT#HB.",
+   "..#Sb#",
+   ".#E.#.",
+   "S.#..."
+  ],
+  "sol": "DDDDDURDDRRRURULDLDL"
+ },
+ {
+  "name": "Crossroads",
+  "hint": "Every path crosses every other. Only once each.",
+  "grid": [
+   "...#.P",
+   "..#.#.",
+   "#.#...",
+   "S.J.bT",
+   ".S##T.",
+   ".HS.Bb",
+   "..#.#E"
+  ],
+  "sol": "DDLLDLRDDLLLURULRDDD"
+ },
+ {
+  "name": "Skipping Stones",
+  "hint": "Hop, fly, hop.",
+  "grid": [
+   ".#...#.",
+   ".S#..S.",
+   "JH.#JH.",
+   "EH..H..",
+   "#SH.S#H",
+   "..JS#..",
+   "...#P.S"
+  ],
+  "sol": "RURDUUULLDDLDLLUULDD"
+ },
+ {
+  "name": "Gearbox",
+  "hint": "Two levers, many moving parts.",
+  "grid": [
+   ".#E#.PJ",
+   ".#..##.",
+   "..b#...",
+   ".S#..#.",
+   "#.TB.J#",
+   "...J#H.",
+   "..#SJ.."
+  ],
+  "sol": "RDDLLDDRDLLULLUUURUU"
+ },
+ {
+  "name": "Master Key",
+  "hint": "Everything from this pack in one board.",
+  "grid": [
+   "....T.",
+   "..BSbH",
+   "P.J#JJ",
+   ".#S.#.",
+   "#..bT.",
+   ".#H...",
+   "EH...S"
+  ],
+  "sol": "RRURDRDRDDDLLULUDRRRL"
+ },
+ {
+  "section": "Grandmaster",
+  "name": "Floodgates",
+  "hint": "Open one gate, close another.",
+  "grid": [
+   "T..##..",
+   "JB...#.",
+   "H.B.HE.",
+   "..#.Jb#",
+   "#JbB#..",
+   ".....#.",
+   ".P..T.."
+  ],
+  "sol": "RRRULLLUUUUULDRRDDRRU"
+ },
+ {
+  "name": "Catapult",
+  "hint": "The spring knows the way. Do you?",
+  "grid": [
+   "..#.#..",
+   "..#..#P",
+   "EB.....",
+   "#S#b..S",
+   ".B..S#T",
+   ".b..#..",
+   "..b.SH."
+  ],
+  "sol": "DLLLDDDDRRUUULLDLLUUL"
+ },
+ {
+  "name": "Ferry",
+  "hint": "Cross the water at the right time.",
+  "grid": [
+   "..T.JB#",
+   "..B.#.E",
+   "B#.B.#.",
+   "..HJ.##",
+   ".T.#b..",
+   "..#PT.#",
+   "...#T.."
+  ],
+  "sol": "RDRUULULLDLUUURRRURRDR"
+ },
+ {
+  "name": "Stepping Stones",
+  "hint": "Count every gap before you jump.",
+  "grid": [
+   "S.H.JH.",
+   "..#.H..",
+   "#P.#.S.",
+   ".##.#..",
+   ".HS.SH.",
+   "J.##.H.",
+   "S.E#.S#"
+  ],
+  "sol": "UULRRRDDDLUDLUULLLDDRR"
+ },
+ {
+  "name": "Undertow",
+  "hint": "The current pulls the wrong way.",
+  "grid": [
+   ".S.H.#.",
+   "..T#B.E",
+   ".#B.#.#",
+   "H...##.",
+   ".H.TS..",
+   "......#",
+   "ST..#P."
+  ],
+  "sol": "ULLLURRLDRDLUURRULRDRR"
+ },
+ {
+  "name": "Tango",
+  "hint": "Two steps forward, one portal back.",
+  "grid": [
+   ".#.1#E#",
+   "P....B.",
+   "..BS#..",
+   ".#T.JB.",
+   "##.#b..",
+   ".2BTH.#",
+   "..T.JH."
+  ],
+  "sol": "RRURDRURDRUULLURURRU"
+ },
+ {
+  "name": "Toll Road",
+  "hint": "Every lever costs you a tile.",
+  "grid": [
+   ".T....#",
+   "#B...#.",
+   "..#T.bT",
+   "#b..#.T",
+   "T.#..#P",
+   "T..##..",
+   "...BE#."
+  ],
+  "sol": "UULLUULLLDRRDDLLDDLDRRRR"
+ },
+ {
+  "name": "Spring Garden",
+  "hint": "So many springs, so few landings.",
+  "grid": [
+   ".....S.",
+   "S#..#H.",
+   "..#.#.P",
+   "..S..##",
+   "..#.#SE",
+   "HH.HS.#",
+   "SS.S..."
+  ],
+  "sol": "UULLLDDDLLDLUUUDRRRRURUR"
+ },
+ {
+  "name": "Lighthouse",
+  "hint": "Find the light at the end.",
+  "grid": [
+   "....T.",
+   ".T#...",
+   "...##.",
+   "H..2..",
+   "J.BS#1",
+   ".Pb#E#",
+   "S.S.B."
+  ],
+  "sol": "UUUUURRDRRDDDLDRLDDRRRRU"
+ },
+ {
+  "name": "Seesaw",
+  "hint": "Up one side, down the other.",
+  "grid": [
+   ".#.bS..",
+   "P##EH#.",
+   "...#H..",
+   "STH..#.",
+   ".#S.#..",
+   "ST.HSBT",
+   "#..#T.T"
+  ],
+  "sol": "DRDLRDLDLLRDRURUUUUULLLD"
+ },
+ {
+  "name": "Chain Reaction",
+  "hint": "Each lever sets up the next.",
+  "grid": [
+   ".#..P.T",
+   ".T#.#.b",
+   "...#.#T",
+   ".J.#..T",
+   "....J#.",
+   "..J.#.#",
+   "..bTbE."
+  ],
+  "sol": "RDRDDLLDLLLLUUURDDDRRDRR"
+ },
+ {
+  "name": "Rabbit Warren",
+  "hint": "Tunnels everywhere. One way out.",
+  "grid": [
+   "..B...1",
+   "T......",
+   ".#.#2BJ",
+   "#.B....",
+   "...#...",
+   ".#E##.#",
+   "..#.P.."
+  ],
+  "sol": "RUUURUULLLLLLURRRRRRDLLDD"
+ },
+ {
+  "name": "Hall of Mirrors",
+  "hint": "Nothing is where it seems.",
+  "grid": [
+   ".B.J..#",
+   "S#.HE#.",
+   ".J#.##.",
+   "P...TB2",
+   "..1.#T#",
+   "..HB...",
+   "BTJTHS."
+  ],
+  "sol": "DDRDRULDDDLUUULLULUURRRRD"
+ },
+ {
+  "name": "Point of No Return",
+  "hint": "Think twenty moves ahead.",
+  "grid": [
+   "..S.#.",
+   "T....P",
+   ".#.S..",
+   "#E#...",
+   "B.#...",
+   ".#.b#.",
+   "SS...#"
+  ],
+  "sol": "DDDLLURUULLLLURRDRDLLLUURU"
+ },
+ {
+  "name": "Bamboozled",
+  "hint": "You've been warned.",
+  "grid": [
+   "..H.S.#",
+   "bTSBB#E",
+   ".H.S.Hb",
+   ".S.#B..",
+   ".#S..#.",
+   "T.#.P.#",
+   "BSS...."
+  ],
+  "sol": "DLLLULUURRDRRUUULURLDRDRRU"
+ },
+ {
+  "name": "Grand Bumpuzzle",
+  "hint": "The final final boss.",
+  "grid": [
+   "T....#.",
+   "b..J..#",
+   ".J.#JB.",
+   "bbS#..#",
+   "B.#PJH.",
+   "JHT.BS#",
+   "...B#SE"
+  ],
+  "sol": "RUUULLDDLLUUURDDDLDDRRRURRDR"
  }
 ]/*END*/;
 
