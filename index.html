@@ -63,7 +63,13 @@ button { font: inherit; color: inherit; border: none; background: none; cursor: 
 .soon { grid-column: 1 / -1; margin-top: 10px; padding: 14px; border-radius: 14px; border: 1px dashed var(--line);
   color: var(--faint); font-size: .85rem; text-align: center; display: flex; flex-direction: column; gap: 3px; }
 .soon b { color: var(--dim); font-size: .95rem; }
-.homefoot { margin-top: 22px; display: flex; gap: 10px; }
+.homefoot { margin-top: 22px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.pill.install { color: var(--gold); border-color: var(--gold); margin: -8px 0 18px; font-weight: 700; }
+.steps { text-align: left; margin-top: 10px; display: flex; flex-direction: column; gap: 10px; }
+.steps div { display: flex; gap: 10px; align-items: flex-start; color: var(--dim); font-size: .92rem; line-height: 1.4; }
+.steps b.n { flex: none; width: 24px; height: 24px; border-radius: 50%; background: var(--panel); border: 1px solid var(--line);
+  color: var(--gold); display: flex; align-items: center; justify-content: center; font-size: .8rem; }
+.steps svg { width: 18px; height: 18px; vertical-align: -3px; }
 .links { margin-top: 14px; display: flex; gap: 18px; }
 .linkbtn { color: var(--faint); font-size: .8rem; text-decoration: underline; }
 .consent { position: fixed; left: 12px; right: 12px; bottom: max(12px, env(safe-area-inset-bottom)); z-index: 30;
@@ -214,6 +220,7 @@ button { font: inherit; color: inherit; border: none; background: none; cursor: 
 <section id="home" class="screen">
   <div class="logo">BUMPUZZLED</div>
   <div class="tag">Every step is one-way. Think first.</div>
+  <button class="pill install" id="installbtn" style="display:none">📲 Install app</button>
   <div id="levelgrid"></div>
   <div class="homefoot">
     <button class="pill" id="howbtn">How to play</button>
@@ -484,6 +491,52 @@ function showHome() {
 }
 $("soundbtn").onclick = () => { save.sound = !save.sound; persist(); showHome(); };
 $("howbtn").onclick = () => showHowTo();
+
+// ------------------------------------------------------------ install
+// Android/desktop Chrome: hold the browser's install prompt and fire it from
+// our button. iPhone (no prompt API) and other phones: show instructions.
+let installPrompt = null, justInstalled = false;
+const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) ||
+  (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+const isMobile = isIOS || /android/i.test(navigator.userAgent);
+function updateInstallBtn() {
+  $("installbtn").style.display = !isInstalled() && !justInstalled && (installPrompt || isMobile) ? "" : "none";
+}
+addEventListener("beforeinstallprompt", e => { e.preventDefault(); installPrompt = e; updateInstallBtn(); });
+addEventListener("appinstalled", () => { installPrompt = null; justInstalled = true; updateInstallBtn(); });
+$("installbtn").onclick = async () => {
+  if (installPrompt) {
+    const p = installPrompt;
+    track("install_click", { method: "prompt" });
+    p.prompt();
+    try {
+      const r = await p.userChoice;
+      track("install_prompt_result", { outcome: r.outcome });
+      if (r.outcome === "accepted") { installPrompt = null; justInstalled = true; updateInstallBtn(); }
+    } catch (e) {}
+    return;
+  }
+  track("install_click", { method: isIOS ? "ios_instructions" : "menu_instructions" });
+  showInstallHelp();
+};
+function showInstallHelp() {
+  const shareIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 3v12M8 7l4-4 4 4"/><path d="M6 11H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1"/></svg>`;
+  const steps = isIOS ? [
+    `Tap the <b style="color:var(--text)">Share</b> button ${shareIcon} (bottom of Safari, or top right on iPad).`,
+    `Scroll down and tap <b style="color:var(--text)">Add to Home Screen</b>.`,
+    `Tap <b style="color:var(--text)">Add</b>. Bumpuzzled appears on your home screen and works offline.`,
+  ] : [
+    `Tap your browser's <b style="color:var(--text)">menu</b> (usually <b style="color:var(--text)">⋮</b> at the top right).`,
+    `Tap <b style="color:var(--text)">Install app</b> or <b style="color:var(--text)">Add to Home screen</b>.`,
+    `Confirm. Bumpuzzled appears on your home screen and works offline.`,
+  ];
+  openCard(`<div class="kicker">INSTALL</div><h2>Put Bumpuzzled on your home screen</h2>
+    <div class="steps">${steps.map((t, k) => `<div><b class="n">${k + 1}</b><span>${t}</span></div>`).join("")}</div>
+    <div class="row"><button class="go" id="cardOk">Got it</button></div>`);
+  $("cardOk").onclick = closeCard;
+}
+updateInstallBtn();
 
 // ------------------------------------------------------------ board (3D)
 let li = 0, lv, st, hist, busy = false, done = false;
