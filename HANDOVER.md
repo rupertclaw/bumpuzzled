@@ -37,7 +37,7 @@ Roadmap: 1) levels ✔ — 32 levels in two sections ("Learning the ropes" 1–1
 | `verify.py` | Ship check | Run before every push |
 | `levelgen.py` | Dev-only layout search | Not shipped |
 | `sw.js` | Service worker, network-first | Bump `CACHE` when shipped files change (verify.py enforces) |
-| `manifest.webmanifest`, `icon.svg` | PWA bits | |
+| `manifest.webmanifest`, `icon-*.png`, `apple-touch-icon.png` | PWA bits | Home-screen icons made from the owner's artwork `art/icon-source.jpg` (2000×2000): white outer corners flood-filled navy, resized to 192/512/180; `icon-maskable-512.png` shrinks it to the central 80% for Android's circle crop. `icon.svg` is only the browser-tab favicon. |
 | `DESIGN.md` | Canonical rules + decisions log | Keep in sync when rules change |
 | `.claude/launch.json` | Local preview server config | Dev convenience |
 

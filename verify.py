@@ -17,7 +17,8 @@ import json, subprocess, sys, re, pathlib, tempfile, os
 import sim
 
 HERE = pathlib.Path(__file__).parent
-SHIPPED = ["index.html", "game-core.js", "levels.js", "manifest.webmanifest", "icon.svg"]
+SHIPPED = ["index.html", "game-core.js", "levels.js", "manifest.webmanifest", "icon.svg",
+           "icon-192.png", "icon-512.png", "icon-maskable-512.png", "apple-touch-icon.png"]
 ok = True
 
 
