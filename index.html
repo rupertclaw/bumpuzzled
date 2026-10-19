@@ -396,7 +396,24 @@ const CONSENT_REGIONS = ["AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "
 window.dataLayer = window.dataLayer || [];
 function gtag() { dataLayer.push(arguments); }
 const isInstalled = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
-function track(name, params) { if (GA_ON && save.consent !== "denied") gtag("event", name, params || {}); }
+// Umami: cookie-free, no personal data, so no consent is needed: it also counts players who say
+// "No thanks" to Google's cookie, or whose ad blocker stops Google. Production site only.
+// save.consent is the answer to the cookie banner (Google only); save.analyticsOff is the Privacy
+// card's off switch, which stops both. Before Umami, "No thanks" also meant "off", so anyone who
+// had already said no starts with analytics off.
+const UMAMI_ID = "eb46ca5a-dd66-486e-87c6-cdfd8293ed29";
+const UMAMI_ON = location.hostname === "bumpuzzled.com";
+if (save.analyticsOff === undefined) { save.analyticsOff = save.consent === "denied"; persist(); }
+const umamiQueue = []; // events made before Umami's script arrives (capped, in case it's blocked)
+function umamiTrack(name, params) {
+  if (!UMAMI_ON || save.analyticsOff) return;
+  if (window.umami && window.umami.track) window.umami.track(name, params || {});
+  else if (umamiQueue.length < 50) umamiQueue.push([name, params]);
+}
+function track(name, params) {
+  if (GA_ON && !save.analyticsOff && save.consent !== "denied") gtag("event", name, params || {});
+  umamiTrack(name, params);
+}
 
 function inEuropeTZ() {
   try {
@@ -406,7 +423,14 @@ function inEuropeTZ() {
 }
 
 function initAnalytics() {
-  if (!GA_ON) return;
+  if (UMAMI_ON && !save.analyticsOff) {
+    const u = document.createElement("script");
+    u.defer = true; u.src = "https://cloud.umami.is/script.js";
+    u.dataset.websiteId = UMAMI_ID; u.dataset.domains = "bumpuzzled.com";
+    u.onload = () => { for (const [name, params] of umamiQueue.splice(0)) umamiTrack(name, params); };
+    document.head.appendChild(u);
+  }
+  if (!GA_ON || save.analyticsOff) return;
   const off = { ad_storage: "denied", ad_user_data: "denied", ad_personalization: "denied" };
   gtag("consent", "default", { ...off, analytics_storage: "granted" });
   gtag("consent", "default", { ...off, analytics_storage: "denied", region: CONSENT_REGIONS });
@@ -433,12 +457,12 @@ $("consentYes").onclick = () => setConsent("granted");
 $("consentNo").onclick = () => setConsent("denied");
 
 function showPrivacy() {
-  const on = save.consent !== "denied";
+  const on = !save.analyticsOff;
   openCard(`<div class="kicker">PRIVACY</div><h2>What we collect</h2>
     <div class="privacy">
-      <p>Bumpuzzled uses Google Analytics to count players and see which levels people finish or get stuck on, so we can improve the game.</p>
-      <p>It records game events (level number, moves, stars, shares, installs) plus standard details like device type and approximate location (country/city). No names, emails or accounts.</p>
-      <p>Your progress is saved only on this device. In the UK and EU, analytics cookies are only used if you say OK.</p>
+      <p>Bumpuzzled uses Google Analytics and Umami to count players and see which levels people finish or get stuck on, so we can improve the game.</p>
+      <p>They record game events (level number, moves, stars, shares, installs) plus standard details like device type and approximate location (country/city). No names, emails or accounts.</p>
+      <p>Your progress is saved only on this device. In the UK and EU, Google's analytics cookies are only used if you say OK. Umami uses no cookies at all.</p>
       <p>Analytics is currently <b style="color:var(--text)">${on ? "on" : "off"}</b>.</p>
       <p>Questions or feedback? <a href="mailto:bumpuzzledgame@gmail.com?subject=Bumpuzzled" style="color:var(--gold)">bumpuzzledgame@gmail.com</a></p>
     </div>
@@ -446,7 +470,8 @@ function showPrivacy() {
       <button class="alt" id="privToggle">${on ? "Turn analytics off" : "Turn analytics on"}</button>
       <button class="go" id="cardOk">Done</button>
     </div>`);
-  $("privToggle").onclick = () => { setConsent(on ? "denied" : "granted"); showPrivacy(); };
+  // off stops both services (and declines Google's cookie); on allows both
+  $("privToggle").onclick = () => { save.analyticsOff = on; setConsent(on ? "denied" : "granted"); showPrivacy(); };
   $("cardOk").onclick = closeCard;
 }
 $("privacybtn").onclick = showPrivacy;
