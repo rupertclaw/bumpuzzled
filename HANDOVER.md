@@ -1,7 +1,7 @@
 # Bumpuzzled — Contributor Handover Brief
 
 **Game name:** Bumpuzzled (originally Tile Rush, briefly Stepfall, both 2026-10-14). The name comes from a reality-TV contestant mangling "bamboozled". Repo renamed `tile-rush` → `bumpuzzled` on 2026-10-15 (before the game was shared, so the old Pages URL dying didn't matter). The save key `tilerush3` was kept so progress survived. Custom domain bumpuzzled.com (Namecheap) connected 2026-10-15 — a new origin, so installs and saved progress started fresh there.
-**Game email:** bumpuzzledgame@gmail.com (shown as Contact on the home screen and in the Privacy card)
+**Game email:** bumpuzzledgame@gmail.com (home-screen **Contact** button opens a card with the address, Copy address and Open email app — a bare mailto: link looked dead on phones without a default mail app; also in the Privacy card)
 **Repo:** https://github.com/rupertclaw/bumpuzzled
 **Live site:** https://bumpuzzled.com (GitHub Pages, branch `main`, root; custom domain via the `CNAME` file — don't delete it. DNS is at Namecheap: 4 A records for `@` → 185.199.108–111.153, `www` CNAME → rupertclaw.github.io. The old github.io address redirects here.)
 **Updated:** 2026-10-14 (v2 rethink). Original brief: 2026-09-27 by Rupert.
