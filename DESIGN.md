@@ -83,4 +83,5 @@ python verify.py      # full ship check (needs node)
 - 2026-10-15: Level 17 "Long Haul" (plain maze, 7 trap steps — owner found it too easy) replaced by "Deep End" (par 22, 17 trap steps, one optimal route). Share now sends a picture of the result (Facebook drops pre-filled text); link previews via Open Graph tags + og-image.jpg.
 - 2026-10-16: Packs 3 "Master" and 4 "Grandmaster" (levels 33–64) published free — owner wants more users before monetising; paid packs to be retrofitted later for newcomers / new packs. Level 18 upgraded.
 - 2026-10-19: Umami (cookie-free analytics) added alongside Google Analytics, because GA misses EU players who decline cookies and ad-blocker users. Privacy card's switch now turns both off; the cookie banner only governs Google's cookie.
+- 2026-10-20: SEO basics: keyword title ("Bumpuzzled – Free Brain-Teaser Puzzle Game"), canonical link, schema.org VideoGame data, the logo is now the page's h1, a short description at the bottom of the home screen, robots.txt and sitemap.xml.
 - Planned (on hold — owner wants to think about it): level editor + share-by-URL (levels are small JSON, encode into the link hash).
