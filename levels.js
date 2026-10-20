@@ -862,6 +862,456 @@ const LEVELS = /*BEGIN*/[
    "...B#SE"
   ],
   "sol": "RUUULLDDLLUUURDDDLDDRRRURRDR"
+ },
+ {
+  "section": "Legend",
+  "name": "Quicksand",
+  "hint": "Springs and levers. Only one safe step at a time.",
+  "grid": [
+   ".....#.",
+   "#...#..",
+   ".TH#...",
+   "..SS.#.",
+   ".BHHSS#",
+   ".SH.#.B",
+   "#SSP.#E"
+  ],
+  "sol": "LLULUUURDRRRDRDRD"
+ },
+ {
+  "name": "Tripwire",
+  "hint": "Springs, jump pads and levers. Only one safe step at a time.",
+  "grid": [
+   ".#P##.B",
+   "......T",
+   "#.#..S.",
+   ".#.#.#.",
+   "b.HJTb.",
+   "J#.#.#.",
+   "..E.#.."
+  ],
+  "sol": "DRRRRDLLDDLLLDDRR"
+ },
+ {
+  "name": "Rockslide",
+  "hint": "Springs, jump pads and levers. Only one safe step at a time.",
+  "grid": [
+   ".SS....",
+   "T......",
+   "#..#...",
+   ".#..##.",
+   "H..#..#",
+   "S...B#.",
+   "P#.#J.E"
+  ],
+  "sol": "URURUUULLURRDRRDRR"
+ },
+ {
+  "name": "Lockstep",
+  "hint": "Jump pads and levers. Only one safe step at a time.",
+  "grid": [
+   "..BTTb.",
+   "..J.b#E",
+   "#.###.#",
+   "..T..#.",
+   "...TH#P",
+   "..#BJ..",
+   "...#.#."
+  ],
+  "sol": "DLLULDLULUURRURRRD"
+ },
+ {
+  "name": "Pitfall",
+  "hint": "Springs, jump pads, levers and portals. Only one safe step at a time.",
+  "grid": [
+   "T..#..",
+   ".SH..#",
+   "..##B.",
+   "S#.T.#",
+   "B.#..#",
+   "J2#b1P",
+   ".#.E#."
+  ],
+  "sol": "LLUUUURDRRDDLDDD"
+ },
+ {
+  "name": "Narrow Escape",
+  "hint": "Springs, jump pads and levers. Only one safe step at a time.",
+  "grid": [
+   ".....#.",
+   "#.#P#E.",
+   "#.bT#.#",
+   "..#bS..",
+   ".T.BH.#",
+   "...J.#.",
+   ".#.#..."
+  ],
+  "sol": "ULLDDDLDDRRRURRUU"
+ },
+ {
+  "name": "Winding Way",
+  "hint": "Jump pads and levers. Only one safe step at a time.",
+  "grid": [
+   "...#E#P",
+   "..bJB..",
+   "Jb.J..#",
+   "TT#H#.#",
+   "Jb..#..",
+   "H.T#..#",
+   ".T.JbT."
+  ],
+  "sol": "DLDDDDLDLLLURULLUURRURU"
+ },
+ {
+  "name": "Cliffhanger",
+  "hint": "Springs, jump pads and levers. Only one safe step at a time.",
+  "grid": [
+   "JB...#.",
+   ".#b.T..",
+   ".#.S#..",
+   "J.#H.H.",
+   "H...BS#",
+   ".#..#.#",
+   ".P.#..E"
+  ],
+  "sol": "RUULULUUURRRDLDDRRDDR"
+ },
+ {
+  "name": "Tight Squeeze",
+  "hint": "Springs, jump pads and levers. Only one safe step at a time.",
+  "grid": [
+   "b.S#ET",
+   "TSP.#B",
+   "#..#.J",
+   "..#.#S",
+   "#.T.#.",
+   "..#..b",
+   "..#.#."
+  ],
+  "sol": "ULLDRDDDRRDRRUUUUL"
+ },
+ {
+  "name": "Booby Trap",
+  "hint": "Springs, jump pads and levers. Only one safe step at a time.",
+  "grid": [
+   ".S..HJE",
+   "..#..B#",
+   "...B#.P",
+   "..#J.#.",
+   ".HSS#TT",
+   ".HS#.B.",
+   "....Tb."
+  ],
+  "sol": "DDDLLDLLUURUUULLRR"
+ },
+ {
+  "name": "Sidestep",
+  "hint": "Springs, jump pads and levers. Only one safe step at a time.",
+  "grid": [
+   ".#...#.",
+   ".T...#E",
+   "....#..",
+   ".#S#.#S",
+   "TPH..b.",
+   "TT.H.#.",
+   "S.BJ#.."
+  ],
+  "sol": "LUURRDDLDLRURRRUUU"
+ },
+ {
+  "name": "Crossfire",
+  "hint": "Springs, jump pads and levers. Only one safe step at a time.",
+  "grid": [
+   "T.b.#..",
+   ".#JBb..",
+   ".S..J..",
+   "S.BS#T#",
+   "#.B.#P.",
+   ".B#.#..",
+   "...bE#."
+  ],
+  "sol": "UULLDDLLULUUURRDDLDRRR"
+ },
+ {
+  "name": "Ledge",
+  "hint": "Springs, jump pads and portals. Only one safe step at a time.",
+  "grid": [
+   "1.#JJE.",
+   "#..2H..",
+   ".H#..#.",
+   "...#.#.",
+   ".SHH.#.",
+   "SH...P#",
+   ".SH.S.."
+  ],
+  "sol": "LLDRLLUUURDUULURR"
+ },
+ {
+  "name": "Hairpin",
+  "hint": "Springs and levers. Only one safe step at a time.",
+  "grid": [
+   "..#EbT.",
+   ".B.#B.#",
+   ".S.B#..",
+   ".#ST#S#",
+   "..#S.T.",
+   "#..HST#",
+   "P...#.."
+  ],
+  "sol": "RUULUURRDRDRDRUUUUULL"
+ },
+ {
+  "name": "Springboard",
+  "hint": "Springs and jump pads. Only one safe step at a time.",
+  "grid": [
+   ".#..SSS",
+   "S.H.##.",
+   "...#.#.",
+   "S##.E.S",
+   "H.###.H",
+   "J..P.#.",
+   ".#.#..."
+  ],
+  "sol": "LLLUURULRURRRDDDLL"
+ },
+ {
+  "name": "Balancing Act",
+  "hint": "Springs and levers. Only one safe step at a time.",
+  "grid": [
+   "#.#....",
+   "...S...",
+   "T...#.#",
+   ".#...#.",
+   ".##.H.S",
+   "bT.SP..",
+   "E#.##.."
+  ],
+  "sol": "RURLUULLLURRRDLLLD"
+ },
+ {
+  "section": "Mythic",
+  "name": "Minotaur",
+  "hint": "Welcome to Mythic. There's only one way through.",
+  "grid": [
+   "P..#...",
+   "T.#.#..",
+   "#b.....",
+   "..T##J#",
+   "###.#S.",
+   "EB.#.bJ",
+   "#SHSJH."
+  ],
+  "sol": "RDDDRURRRDDRDLDLLUL"
+ },
+ {
+  "name": "Hydra",
+  "hint": "Springs and levers. Only one safe step at a time.",
+  "grid": [
+   ".#.#.#.",
+   "..B....",
+   "S#S.#.T",
+   ".S.#..T",
+   ".HH.##P",
+   ".H..#.#",
+   "..#S.E."
+  ],
+  "sol": "ULUULLLLLDDRRUDRDRR"
+ },
+ {
+  "name": "Siren",
+  "hint": "Springs and levers. Only one safe step at a time.",
+  "grid": [
+   ".#E#...",
+   "S.HS...",
+   ".B..#.#",
+   "#.TSP#.",
+   ".H.Bb..",
+   ".Sbb.##",
+   "..S...."
+  ],
+  "sol": "DDLLLURDRUULLULRDLU"
+ },
+ {
+  "name": "Phoenix",
+  "hint": "Jump pads and levers. Only one safe step at a time.",
+  "grid": [
+   "ET.B.PT",
+   "#b.T#.b",
+   ".B.#.#J",
+   "#.TB.J.",
+   "..#.JB.",
+   "#.#.B..",
+   "....JH."
+  ],
+  "sol": "DRDDLLDDLLLUUURUUULL"
+ },
+ {
+  "name": "Kraken",
+  "hint": "Springs, jump pads and levers. Only one safe step at a time.",
+  "grid": [
+   ".P.#...",
+   "#.H..#.",
+   "T......",
+   "T.S.H..",
+   "J.b...#",
+   "H.#.#..",
+   ".#EB.HJ"
+  ],
+  "sol": "DDRRDDLLLURRRDDRDLLL"
+ },
+ {
+  "name": "Gorgon",
+  "hint": "Jump pads and levers. Only one safe step at a time.",
+  "grid": [
+   ".#.#.E.",
+   "...JHB#",
+   "T.#.#..",
+   "BB.##..",
+   ".#....#",
+   ".J.B#P.",
+   "TT..#.."
+  ],
+  "sol": "ULLLDDLULUURUURRRU"
+ },
+ {
+  "name": "Cyclops",
+  "hint": "Springs, jump pads and levers. Only one safe step at a time.",
+  "grid": [
+   ".T.SJ#.",
+   "#..H...",
+   ".JHS.HS",
+   "...#...",
+   "..#EB#.",
+   ".#.HPBS",
+   "#.....S"
+  ],
+  "sol": "DRRUUUUULLULLLDDRRDDL"
+ },
+ {
+  "name": "Chimera",
+  "hint": "Springs and portals. Only one safe step at a time.",
+  "grid": [
+   ".#3.P#.",
+   "E#.HS4.",
+   "..#..#S",
+   "S#.#...",
+   "S#.#H#.",
+   ".S.SH.#",
+   ".##S..."
+  ],
+  "sol": "LLRDDLLUUDLULLLUUUU"
+ },
+ {
+  "name": "Griffin",
+  "hint": "Springs and levers. Only one safe step at a time.",
+  "grid": [
+   "#P.#E.S",
+   "..#..#S",
+   "#.#..#.",
+   "#..##..",
+   ".T#..#S",
+   "#SbHTBB",
+   "..SSB.T"
+  ],
+  "sol": "DDDDDDRRRRURUUUUULL"
+ },
+ {
+  "name": "Pegasus",
+  "hint": "Springs, jump pads, levers and portals. Only one safe step at a time.",
+  "grid": [
+   ".##2SB.",
+   "B.E#J.#",
+   "J##.H.S",
+   ".H...S.",
+   ".P..J..",
+   "1.#TH#.",
+   "#.#J..#"
+  ],
+  "sol": "DLRDRDRDDLLDLUULURRRLUURR"
+ },
+ {
+  "name": "Sphinx",
+  "hint": "Springs and levers. Only one safe step at a time.",
+  "grid": [
+   "E##.T..",
+   "B..#TP#",
+   "#S#.b#.",
+   "#T.#.#.",
+   "..B#...",
+   "#T...#S",
+   "..#TT.S"
+  ],
+  "sol": "ULDDDDRRDDLLULLLUUUULU"
+ },
+ {
+  "name": "Titan",
+  "hint": "Springs, jump pads and levers. Only one safe step at a time.",
+  "grid": [
+   ".......",
+   "#.T.#.#",
+   "..#b.#.",
+   "T#.THS.",
+   "TB#J.HE",
+   "S..HbS#",
+   "BPHSS.."
+  ],
+  "sol": "ULUUURUURRDDDDDRRUURD"
+ },
+ {
+  "name": "Oracle",
+  "hint": "Springs and levers. Only one safe step at a time.",
+  "grid": [
+   ".#.#.S#",
+   "T......",
+   "......#",
+   ".###...",
+   ".#E.#P#",
+   "#.HS#T#",
+   "...bS.."
+  ],
+  "sol": "UULLLLLURRRRRUDDLLUUL"
+ },
+ {
+  "name": "Olympus",
+  "hint": "Springs, levers and portals. Only one safe step at a time.",
+  "grid": [
+   "..H...S",
+   "#E#..#.",
+   ".#.B#..",
+   "..P.#.#",
+   ".#....T",
+   "..S.2H.",
+   "#...1#."
+  ],
+  "sol": "LLDDRDRRRLLRULLLUUUURRRLD"
+ },
+ {
+  "name": "Underworld",
+  "hint": "Springs and levers. Only one safe step at a time.",
+  "grid": [
+   "#.T...S",
+   ".B.T.HS",
+   "...SbT.",
+   "#P#.BH.",
+   "Bb.H.ST",
+   ".HH.S#.",
+   "S.E#..."
+  ],
+  "sol": "URUURDRURRDDDDLLULUDRLDRR"
+ },
+ {
+  "name": "Final Bamboozle",
+  "hint": "The last one. Everything, all at once.",
+  "grid": [
+   "E#.....",
+   "B..J.B#",
+   "##...#.",
+   "BTT.JH.",
+   "..B...J",
+   "#P.#..#",
+   "..#.T.."
+  ],
+  "sol": "UURUUURRDDDRDLDDLUULUUULLU"
  }
 ]/*END*/;
 
