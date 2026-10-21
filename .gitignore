@@ -1,3 +1,4 @@
 # local preview-server config (machine-specific paths)
 .claude/launch.json
 __pycache__/
+.wrangler/

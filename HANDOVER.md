@@ -18,7 +18,7 @@ A grid-routing brain-teaser PWA. Plain HTML/CSS/JS + a service worker: no server
 
 Owner preferences (constraints):
 - **Don't name or reference other games, studios or companies** in the repo or the game (it's public). Say "inspired by classic tile-routing puzzles" if anything. All code, art, sound and level layouts must be original — never copy assets, text or levels from another game.
-- Web2 only. No secret API keys in client code, ever (public IDs like the GA measurement ID are fine). No server, no database. Everything local.
+- Web2 only. No secret API keys in client code, ever (public IDs like the GA measurement ID are fine). No server or database, except the daily puzzle's leaderboard Worker (section 6e, owner's request 2026-10-21). Everything else is local.
 - Mobile-first PWA; must work offline.
 - Simple, universal UX over platform-specific branching.
 - Owner is a vibe-coder: plain English, analogies over jargon, short reports.
@@ -71,7 +71,7 @@ No secrets, tokens or env vars anywhere — keep it that way.
 
 ## 6. Progress storage
 
-localStorage key `tilerush3` (bumped whenever the level set changes, so old progress is ignored; deliberately not renamed when the game was, so players keep their progress): `{ stars: {levelIndex: 1-3}, best: {levelIndex: moves}, seen: [tile kinds whose intro card was shown], sound: bool, character, skin, styleSeen, analyticsOff, installed }`. Level N unlocks when level N-1 has any stars.
+localStorage key `tilerush3` (bumped whenever the level set changes, so old progress is ignored; deliberately not renamed when the game was, so players keep their progress): `{ stars: {levelIndex: 1-3}, best: {levelIndex: moves}, seen: [tile kinds whose intro card was shown], sound: bool, character, skin, styleSeen, analyticsOff, installed, device, nick, daily }`. Level N unlocks when level N-1 has any stars.
 
 ## 6b. Analytics (Umami only)
 
@@ -79,7 +79,7 @@ localStorage key `tilerush3` (bumped whenever the level set changes, so old prog
 - Runs **only on bumpuzzled.com** (`UMAMI_ON`, plus the script's `data-domains`), so local testing never counts. Events made before the script loads are queued (max 50).
 - No cookies, so **no cookie banner or first-visit notice** — don't add Google Analytics or any other cookie-setting tracker back without bringing back proper UK/EU consent. The Privacy card's switch (`save.analyticsOff`) turns analytics off on a device.
 - History: Google Analytics 4 ran 2026-10-15 → 2026-10-21 alongside an EU consent banner; removed (same as Kablamagram) because it missed EU players who declined its cookie and anyone with a blocker. Old `save.consent` / `save.noticeSeen` fields are deleted on load; anyone who'd said "No thanks" starts with analytics off.
-- Events: `app_open {display_mode}`, `app_installed`, `level_start {level_number, level_name}`, `level_complete {level_number, level_name, moves, par, stars, first_clear}`, `level_restart {level_number, moves}`, `level_quit {level_number, moves}`, `share {method, level_number}`, `install_click {method: prompt | ios_instructions | menu_instructions}`, `install_prompt_result {outcome: accepted | dismissed}`. The home screen's **Install app** button fires Chrome's held `beforeinstallprompt` on Android/desktop, and shows step-by-step instructions on iPhone (no install API) and other phones; it hides once the app is known to be installed — running installed, installed via the button (remembered as `save.installed`), or Chrome's `getInstalledRelatedApps()` (needs the `related_applications` entry in the manifest) — and reappears if Chrome offers the install prompt again (i.e. it was uninstalled). `app_open`'s `display_mode` (installed | browser) counts launches from the home-screen icon, which works on iPhone, unlike `app_installed` (Android/desktop Chrome only). Also `contact_open`, `contact_email {method}`, `more_games {to}`, `style_open`, `style_select {kind: character | skin, id}`, `style_unlock {kind, id}`.
+- Events: `app_open {display_mode}`, `app_installed`, `level_start {level_number, level_name}`, `level_complete {level_number, level_name, moves, par, stars, first_clear}`, `level_restart {level_number, moves}`, `level_quit {level_number, moves}`, `share {method, level_number}`, `install_click {method: prompt | ios_instructions | menu_instructions}`, `install_prompt_result {outcome: accepted | dismissed}`. The home screen's **Install app** button fires Chrome's held `beforeinstallprompt` on Android/desktop, and shows step-by-step instructions on iPhone (no install API) and other phones; it hides once the app is known to be installed — running installed, installed via the button (remembered as `save.installed`), or Chrome's `getInstalledRelatedApps()` (needs the `related_applications` entry in the manifest) — and reappears if Chrome offers the install prompt again (i.e. it was uninstalled). `app_open`'s `display_mode` (installed | browser) counts launches from the home-screen icon, which works on iPhone, unlike `app_installed` (Android/desktop Chrome only). Also `contact_open`, `contact_email {method}`, `more_games {to}`, `style_open`, `style_select {kind: character | skin, id}`, `style_unlock {kind, id}`, `daily_start {day, joined}`, `daily_complete {day, moves, par, seconds, rank}`, `daily_board {day}`, `daily_remove`.
 - Any new tracking must be added to the Privacy card text too.
 
 ## 6c. Sharing
@@ -93,6 +93,14 @@ Cosmetic unlocks, earned by **total stars** (stars never go down, so nothing re-
 - **Characters** (`CHARACTERS` in index.html): Bumpy 0★, Minty 20, Ruby 40, Frosty 65, Robo 95, Boo 130, Whiskers 170, Blip 215, Majesty 288. Each is a list of simple shapes on a 40×40 grid, drawn as SVG in the game (`charSVG`) and onto the canvas for share pictures (`drawChar`) from the same data. Shapes in `face` move with the eyes (`look()`). Don't draw the SVG onto the canvas as an image instead: some phones then refuse to save the canvas.
 - **Board themes** (`SKINS`): Midnight 0★, Ice 30, Jungle 60, Lava 100, Candy 150, Space 210. A theme only sets the board/background CSS variables (`--top`, `--wall-hi`, `--glow1`, `--sky`…) via `applyStyle()`; buttons and cards keep the standard colours. Exits, portals, levers, springs and jump pads keep their colours in every theme, so tiles always mean the same thing.
 - Thresholds are fixed numbers: when more packs are released the top items get easier to reach relative to the max — add new items rather than moving old ones (players would lose things).
+
+## 6e. Daily puzzle + leaderboard
+
+The one part of the game with a server: the Worker in `../bumpuzzled-leaderboard/` (Cloudflare, same account as Kablamagram's leaderboard; see its README). It is kept **out of this public repo** because it holds the bank of future daily puzzles.
+- Home screen: the **Daily puzzle #N** button (new at midnight UTC; `DAILY_EPOCH` in index.html must match the Worker's). The start card asks for a nickname (or "Play without joining the leaderboard"); Start asks the Worker for today's board, which starts the clock on the server. The game screen shows a ⏱ clock; undo and restart work until the finish. The finish sends the route (`moveDirs`), the Worker replays it and returns the leaderboard (fewest moves, then quickest; first finish counts).
+- The daily's share picture shows the result and the character, **not the board**, so a share can't give away the route.
+- `LB_URL` points at `http://localhost:8787` when the game runs on localhost (run the Worker locally with `npx wrangler dev`), otherwise at the deployed Worker. The itch.io copy's address (`html-classic.itch.zone`) is allowed by the Worker.
+- Nicknames: same blocked-word check as Kablamagram's. "Remove me" on the leaderboard card deletes a player's results.
 
 ## 7. Pitfalls
 

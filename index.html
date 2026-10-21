@@ -256,6 +256,30 @@ button { font: inherit; color: inherit; border: none; background: none; cursor: 
 .unlockbox .ut { flex: 1; display: flex; flex-direction: column; font-size: .95rem; font-weight: 700; }
 .unlockbox .ut b { color: var(--gold); font-size: .72rem; letter-spacing: 1px; text-transform: uppercase; }
 .card .unlockbox .alt { padding: 11px 12px; white-space: nowrap; }
+
+/* ---------- daily puzzle ---------- */
+.daily { width: 100%; max-width: 380px; margin: 0 0 18px; padding: 13px 16px; border-radius: 16px; text-align: left;
+  background: linear-gradient(135deg, rgba(255,207,90,.16), rgba(255,207,90,.04)); border: 1px solid rgba(255,207,90,.5);
+  display: flex; align-items: center; gap: 12px; box-shadow: 0 5px 0 #0b0c20; }
+.daily:active { transform: translateY(3px); box-shadow: 0 2px 0 #0b0c20; }
+.daily .di { font-size: 1.9rem; flex: none; }
+.daily b { display: block; color: var(--gold); font-size: .75rem; letter-spacing: 2px; }
+.daily span { display: block; color: var(--text); font-size: 1rem; font-weight: 800; }
+.daily small { display: block; color: var(--dim); font-size: .8rem; margin-top: 1px; }
+.namefield { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; text-align: left; color: var(--dim); font-size: .85rem; }
+.namefield input { font: inherit; font-size: 1rem; color: var(--text); background: var(--panel); border: 1px solid var(--line);
+  border-radius: 10px; padding: 11px 12px; user-select: text; -webkit-user-select: text; }
+.lb { list-style: none; margin: 4px 0 0; max-height: 34vh; overflow-y: auto; text-align: left; }
+.lb li { display: flex; gap: 10px; padding: 7px 8px; border-radius: 8px; font-size: .9rem; color: var(--dim); }
+.lb li:nth-child(odd) { background: rgba(255,255,255,.035); }
+.lb li.me { background: rgba(255,207,90,.16); }
+.lb .rk { width: 1.7em; flex: none; text-align: right; color: var(--gold); font-weight: 700; }
+.lb .nk { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); }
+.lb .sc { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.lbhead { display: flex; justify-content: space-between; margin-top: 12px; padding: 0 8px; color: var(--faint); font-size: .7rem; letter-spacing: 1px; }
+.bigtime { font-size: 2.1rem; font-weight: 900; color: var(--gold); margin: 2px 0 4px; font-variant-numeric: tabular-nums; }
+.card .shared.bad { color: var(--bad); }
+#clockwrap { display: none; } #clockwrap.on { display: inline; }
 </style>
 </head>
 <body>
@@ -267,6 +291,7 @@ button { font: inherit; color: inherit; border: none; background: none; cursor: 
     <button class="pill" id="stylebtn">🎨 Style</button>
     <button class="pill install" id="installbtn" style="display:none">📲 Install app</button>
   </div>
+  <button class="daily" id="dailybtn" style="display:none"></button>
   <div id="levelgrid"></div>
   <div class="homefoot">
     <button class="pill" id="howbtn">How to play</button>
@@ -287,7 +312,7 @@ button { font: inherit; color: inherit; border: none; background: none; cursor: 
     <div class="title"><div id="lvnum"></div><div id="lvname"></div></div>
     <button class="iconbtn" id="helpbtn" aria-label="What do the tiles do?">?</button>
   </div>
-  <div id="counter">Moves <b id="moves">0</b> · Par <b id="par">0</b></div>
+  <div id="counter">Moves <b id="moves">0</b> · Par <b id="par">0</b><span id="clockwrap"> · ⏱ <b id="clock">0:00</b></span></div>
   <div id="hint"></div>
   <div id="stage"><div id="scene"></div></div>
   <div id="msg"></div>
@@ -571,7 +596,8 @@ function showPrivacy() {
   openCard(`<div class="kicker">PRIVACY</div><h2>What we collect</h2>
     <div class="privacy">
       <p>Bumpuzzled uses Umami, a privacy-friendly analytics service, to count players and see which levels people finish or get stuck on, so we can improve the game.</p>
-      <p>It records game events (level number, moves, stars, shares, installs, style picks) plus standard details like device type and country. No names, emails or accounts, and the game uses no cookies.</p>
+      <p>It records game events (level number, moves, stars, daily results, shares, installs, style picks) plus standard details like device type and country. No names, emails or accounts, and the game uses no cookies.</p>
+      <p>The daily puzzle's leaderboard is optional. If you join, the game sends your nickname, your moves and time, and a random code made by the game on your device (so you appear once a day) to our leaderboard, which runs on Cloudflare. It keeps only those, with the puzzle number, for 30 days. You can remove yourself from the leaderboard screen at any time.</p>
       <p>Your progress is saved only on this device.</p>
       <p>Analytics is currently <b style="color:var(--text)">${on ? "on" : "off"}</b>.</p>
       <p>Questions or feedback? <a href="mailto:bumpuzzledgame@gmail.com?subject=Bumpuzzled" style="color:var(--gold)">bumpuzzledgame@gmail.com</a></p>
@@ -647,6 +673,7 @@ function showHome() {
   soon.innerHTML = "<b>More packs coming soon</b>Check back for new puzzles!";
   grid.appendChild(soon);
   $("soundbtn").textContent = save.sound ? "🔊 Sound on" : "🔇 Sound off";
+  renderDailyBtn();
   const fresh = newUnlocks(save.styleSeen || 0, totalStars()).length;
   $("stylebtn").innerHTML = "🎨 Style" + (fresh ? `<b class="newdot">NEW!</b>` : "");
 }
@@ -748,6 +775,9 @@ updateInstallBtn();
 
 // ------------------------------------------------------------ board (3D)
 let li = 0, lv, st, hist, busy = false, done = false;
+let cur = null;      // what's on the board: a LEVELS entry, or the daily puzzle
+let daily = null;    // the daily puzzle's {day, startedAt, offset, par, joined} while it's open
+let moveDirs = [];   // the moves so far (U/D/L/R), kept alongside hist: the daily sends this route
 let tiles = [], cs = 50, gap = 5, TH = 10, WH = 26, TILT = 34;
 const scene = $("scene");
 const token = document.createElement("div");
@@ -757,32 +787,39 @@ shadow.id = "shadow";
 
 let playing = false;   // a level is open and not yet won (for level_quit)
 function quitIfPlaying() {
-  if (playing && !done && hist.length) track("level_quit", { level_number: li + 1, moves: hist.length });
+  if (playing && !done && hist.length && !daily) track("level_quit", { level_number: li + 1, moves: hist.length });
   playing = false;
 }
 
 function startLevel(i) {
   winSeq++;
   quitIfPlaying();
+  daily = null;
   li = i;
-  const L = LEVELS[i];
-  lv = makeLevel(L.grid);
+  cur = LEVELS[i];
+  openBoard(`LEVEL ${i + 1} OF ${LEVELS.length}`, cur.sol.length);
+  playing = true;
+  track("level_start", { level_number: i + 1, level_name: cur.name });
+  showIntros(cur.grid);
+}
+
+function openBoard(label, par) {
+  lv = makeLevel(cur.grid);
   st = initialState(lv);
-  hist = []; done = false; busy = false;
+  hist = []; moveDirs = []; done = false; busy = false;
   $("home").classList.remove("on");
   $("game").classList.add("on");
-  $("lvnum").textContent = `LEVEL ${i + 1} OF ${LEVELS.length}`;
-  $("lvname").textContent = L.name;
-  $("hint").textContent = L.hint || "";
-  $("par").textContent = L.sol.length;
-  playing = true;
-  track("level_start", { level_number: i + 1, level_name: L.name });
+  $("lvnum").textContent = label;
+  $("lvname").textContent = cur.name;
+  $("hint").textContent = cur.hint || "";
+  $("par").textContent = par;
+  $("clockwrap").classList.toggle("on", !!daily);
   setMsg("");
   buildBoard();
   paint();
   placeToken();
   updateCounter();
-  showIntros(L.grid);
+  tickClock();
 }
 
 function layout() {
@@ -910,6 +947,7 @@ function move(dir) {
   if (res.fall) return fall(dir, res);
   const prev = st;
   hist.push(st);
+  moveDirs.push(dir);
   st = res.st;
   updateCounter();
   animateMove(prev, res);
@@ -1005,10 +1043,11 @@ function animateMove(prev, res) {
 }
 
 function undo() {
+  if (busy || !hist.length || (daily && done)) return; // a finished daily stays finished
   winSeq++;
-  if (busy || !hist.length) return;
   if (done) { done = false; closeCard(); }
   st = hist.pop();
+  moveDirs.pop();
   paint();
   placeToken();
   updateCounter();
@@ -1017,16 +1056,17 @@ function undo() {
 }
 
 function restart() {
+  if (busy || (daily && done)) return;
   winSeq++;
-  if (busy) return;
-  if (hist.length && !done) track("level_restart", { level_number: li + 1, moves: hist.length });
+  if (hist.length && !done && !daily) track("level_restart", { level_number: li + 1, moves: hist.length });
   done = false; closeCard();
-  st = initialState(lv); hist = [];
+  st = initialState(lv); hist = []; moveDirs = [];
   paint(); placeToken(); updateCounter(); setMsg("");
 }
 
 let winSeq = 0;   // bumps on every level start/restart/undo so a stale win card never shows
 function win() {
+  if (daily) return winDaily();
   done = true;
   const seq = ++winSeq;
   const moves = hist.length, par = LEVELS[li].sol.length;
@@ -1077,7 +1117,9 @@ function win() {
     });
     let shareFile = null;
     makeShareFile(li, moves, par, stars).then(f => { shareFile = f; });
-    $("cardShare").onclick = () => shareResult(li, moves, par, stars, shareFile);
+    const shareText = `Bumpuzzled 🧩 Level ${li + 1} · ${LEVELS[li].name}\n` +
+      `${"⭐".repeat(stars)}${"☆".repeat(3 - stars)} ${moves} moves (par ${par})\nCan you beat it? ${SHARE_URL}`;
+    $("cardShare").onclick = () => shareResult(shareText, shareFile, { level_number: li + 1 });
     $("cardNext").onclick = () => { closeCard(); last ? showHome() : startLevel(li + 1); };
   }, 750);
 }
@@ -1261,17 +1303,14 @@ function makeShareFile(i, moves, par, stars) {
 // Share: a picture through the phone's share sheet when possible; otherwise
 // the text version via the share sheet or the clipboard (plus a Save image link).
 const SHARE_URL = "https://bumpuzzled.com";
-async function shareResult(i, moves, par, stars, file) {
-  const text = `Bumpuzzled 🧩 Level ${i + 1} · ${LEVELS[i].name}\n` +
-    `${"⭐".repeat(stars)}${"☆".repeat(3 - stars)} ${moves} moves (par ${par})\n` +
-    `Can you beat it? ${SHARE_URL}`;
+async function shareResult(text, file, about) {
   const note = $("cardShared");
   if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
-    try { await navigator.share({ files: [file], text, title: "Bumpuzzled" }); track("share", { method: "image", level_number: i + 1 }); return; }
+    try { await navigator.share({ files: [file], text, title: "Bumpuzzled" }); track("share", { method: "image", ...about }); return; }
     catch (e) { if (e && e.name === "AbortError") return; }
   }
   if (navigator.share) {
-    try { await navigator.share({ text }); track("share", { method: "native", level_number: i + 1 }); return; }
+    try { await navigator.share({ text }); track("share", { method: "native", ...about }); return; }
     catch (e) { if (e && e.name === "AbortError") return; }
   }
   const saveLink = () => {
@@ -1279,14 +1318,14 @@ async function shareResult(i, moves, par, stars, file) {
     const a = document.createElement("a");
     a.href = URL.createObjectURL(file); a.download = file.name; a.textContent = "Save image";
     a.style.color = "var(--gold)";
-    a.onclick = () => track("share", { method: "download", level_number: i + 1 });
+    a.onclick = () => track("share", { method: "download", ...about });
     note.append(" · ", a);
   };
   try {
     await navigator.clipboard.writeText(text);
     note.textContent = "Copied! Paste it anywhere.";
     saveLink();
-    track("share", { method: "clipboard", level_number: i + 1 });
+    track("share", { method: "clipboard", ...about });
   } catch (e) {
     // last resort: show the text so it can be copied by hand
     note.innerHTML = "";
@@ -1342,7 +1381,7 @@ function legendHTML(kinds) {
     `<div class="item">${demoCell(k)}<div><b>${INFO[k][0]}</b> — ${INFO[k][1]}</div></div>`).join("") + `</div>`;
 }
 function showLegend() {
-  const present = new Set(LEVELS[li].grid.join("").split("").map(KIND));
+  const present = new Set(cur.grid.join("").split("").map(KIND));
   const kinds = [".", "#", "H", "J", "S", "T", "B", "1", "E"].filter(k => present.has(k));
   openCard(`<div class="kicker">THIS LEVEL'S TILES</div>${legendHTML(kinds)}
     <p style="margin-top:12px;font-size:.82rem">Tip: tap any tile on the board to see what it does.</p>
@@ -1357,6 +1396,245 @@ function showHowTo() {
   $("cardOk").onclick = closeCard;
 }
 
+// ------------------------------------------------------------ daily puzzle
+// One board for everyone each day (new at midnight UTC), from the leaderboard
+// server (a Cloudflare Worker, kept outside this public repo with the puzzles).
+// The server only hands out today's board when the player taps Start, times
+// them on its own clock, and replays their route through the game rules, so a
+// result can't be faked. Fewest moves wins; ties go to the quickest. Only the
+// first finish counts. Joining the leaderboard is optional (a nickname only).
+const LB_URL = location.hostname === "localhost" ? "http://localhost:8787"
+  : "https://bumpuzzled-leaderboard.kablamagram-leaderboard.workers.dev";
+const DAILY_EPOCH = Date.UTC(2026, 9, 21); // Daily #1, same as the server
+const dailyNumber = () => Math.floor((Date.now() - DAILY_EPOCH) / 864e5) + 1;
+const todaysDaily = () => save.daily && save.daily.day === dailyNumber() ? save.daily : null;
+const esc = t => String(t).replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch]);
+function deviceId() { // random code that keeps one entry per device per day; it identifies nobody
+  if (!save.device) {
+    save.device = [...crypto.getRandomValues(new Uint8Array(12))].map(b => b.toString(16).padStart(2, "0")).join("");
+    persist();
+  }
+  return save.device;
+}
+function fmtTime(ms) {
+  const t = Math.max(0, Math.floor(ms / 1000)), h = Math.floor(t / 3600), m = Math.floor(t / 60) % 60, sec = t % 60;
+  return (h ? `${h}:${String(m).padStart(2, "0")}` : m) + ":" + String(sec).padStart(2, "0");
+}
+async function api(path, body, method) {
+  const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 10000);
+  try {
+    const r = await fetch(LB_URL + path, body ? { method: method || "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body), signal: ctl.signal } : { method: method || "GET", signal: ctl.signal });
+    const data = await r.json().catch(() => ({}));
+    return r.ok ? { ok: true, data } : { ok: false, error: data.error || "Something went wrong. Try again." };
+  } catch (e) {
+    return { ok: false, error: "Couldn't reach the daily puzzle. Check your connection and try again." };
+  } finally { clearTimeout(timer); }
+}
+
+function tickClock() {
+  if (!daily) return;
+  $("clock").textContent = fmtTime((done && daily.finalMs != null) ? daily.finalMs : Date.now() + daily.offset - daily.startedAt);
+}
+setInterval(() => { if (daily && !done) tickClock(); }, 500);
+
+function renderDailyBtn() {
+  const day = dailyNumber(), d = todaysDaily(), b = $("dailybtn");
+  b.style.display = day >= 1 ? "" : "none";
+  b.innerHTML = `<div class="di">📅</div><div><b>DAILY PUZZLE #${day}</b>` + (d && d.moves
+    ? `<span>Solved: ${d.moves} moves · ${fmtTime(d.ms)}</span><small>${d.rank ? `#${d.rank} of ${d.total} today · ` : ""}see the leaderboard</small>`
+    : d ? `<span>Your clock is running!</span><small>Tap to carry on</small>`
+    : `<span>Same board for everyone</span><small>Fewest moves wins · new every day</small>`) + `</div>`;
+}
+$("dailybtn").onclick = () => todaysDaily() && todaysDaily().moves ? showDailyBoard() : showDailyIntro();
+
+function showDailyIntro() {
+  const day = dailyNumber(), d = todaysDaily();
+  openCard(`<div class="kicker">DAILY PUZZLE #${day}</div><h2>Same board for everyone</h2>
+    <p>Fewest moves wins; ties go to whoever was quickest. The clock starts when you tap Start and keeps running if you leave, so pick a quiet minute. Only your first finish counts. Undo is still free.</p>
+    ${d ? `<p style="margin-top:10px;color:var(--gold)">Your clock is already running!</p>`
+      : `<label class="namefield">Your nickname on the leaderboard
+          <input id="dailyNick" maxlength="20" autocomplete="nickname" placeholder="e.g. TileTamer" value="${esc(save.nick || "")}"></label>`}
+    <div class="shared bad" id="dailyNote"></div>
+    <div class="row"><button class="alt" id="dailyBoardBtn">Leaderboard</button>
+      <button class="go" id="dailyGo">${d ? "Carry on" : "Start"}</button></div>
+    ${d ? "" : `<button class="linkbtn" id="dailySolo">Play without joining the leaderboard</button>`}`);
+  $("dailyBoardBtn").onclick = () => showDailyBoard();
+  $("dailyGo").onclick = () => {
+    if (d) return startDaily(d.joined, save.nick || "");
+    const typed = $("dailyNick").value.trim();
+    if (typed.replace(/[^\p{L}\p{N}]/gu, "").length < 2) { $("dailyNote").textContent = "Pick a nickname (at least 2 letters or numbers)."; return; }
+    startDaily(true, typed);
+  };
+  if (!d) $("dailySolo").onclick = () => startDaily(false, "");
+}
+
+async function startDaily(join, typed) {
+  const go = $("dailyGo");
+  go.disabled = true; $("dailyNote").textContent = "";
+  const nick = typed.normalize("NFC").replace(/[^\p{L}\p{N} .'\-_]/gu, "").replace(/\s+/g, " ").trim().slice(0, 20);
+  const r = await api("/start", { device: deviceId(), join, nick, typed });
+  go.disabled = false;
+  if (!r.ok) { $("dailyNote").textContent = r.error[0].toUpperCase() + r.error.slice(1) + (/nickname/.test(r.error) ? "." : ""); return; }
+  const d = r.data;
+  if (join) { save.nick = nick; }
+  save.daily = { day: d.day, joined: d.joined };
+  if (d.result) Object.assign(save.daily, d.result); // finished already (another tab)
+  persist();
+  if (d.result) return showDailyBoard();
+  closeCard();
+  winSeq++; quitIfPlaying();
+  daily = { day: d.day, startedAt: d.started_at, offset: d.now - Date.now(), par: d.par, joined: d.joined };
+  li = -1;
+  cur = { grid: d.grid, name: "Daily puzzle", hint: "Same board for everyone today" };
+  openBoard(`DAILY #${d.day}`, d.par);
+  playing = true;
+  track("daily_start", { day: d.day, joined: d.joined });
+}
+
+async function winDaily() {
+  done = true; playing = false;
+  const seq = ++winSeq, dd = daily, moves = hist.length, route = moveDirs.join("");
+  dd.finalMs = Date.now() + dd.offset - dd.startedAt; tickClock();
+  setTimeout(() => {
+    if (seq !== winSeq) return;
+    const [x, y] = px(st.r, st.c);
+    token.animate([{ transform: tokT(x, y, TH) }, { transform: tokT(x, y, TH + cs * .7, 1.1) }, { transform: tokT(x, y, TH) }],
+      { duration: 380, easing: "ease-out" });
+  }, 260);
+  SFX.win(); buzz([30, 40, 30]);
+  const send = async () => {
+    openCard(`<div class="kicker">DAILY #${dd.day}</div><h2>Solved!</h2><p>Checking your route…</p>`);
+    const r = await api("/finish", { day: dd.day, device: deviceId(), route });
+    if (seq !== winSeq || daily !== dd) return;
+    if (!r.ok) {
+      openCard(`<div class="kicker">DAILY #${dd.day}</div><h2>Solved, but…</h2>
+        <p>${esc(r.error)}</p><p style="margin-top:6px">Your finish isn't saved yet.</p>
+        <div class="row"><button class="alt" id="cardHome">Levels</button><button class="go" id="cardRetry">Try again</button></div>`);
+      $("cardRetry").onclick = send;
+      $("cardHome").onclick = () => { closeCard(); daily = null; showHome(); };
+      return;
+    }
+    const b = r.data;
+    dd.finalMs = b.you ? b.you.ms : b.mine.ms; tickClock();
+    save.daily = { day: dd.day, joined: dd.joined, moves: b.you ? b.you.moves : b.mine.moves, ms: dd.finalMs,
+      rank: b.you ? b.you.rank : 0, total: b.total };
+    persist();
+    track("daily_complete", { day: dd.day, moves: save.daily.moves, par: dd.par, seconds: Math.round(dd.finalMs / 1000), rank: save.daily.rank });
+    dailyResultCard(b);
+  };
+  setTimeout(send, 650);
+}
+
+function boardHTML(b) {
+  if (!b.total) return `<p style="margin-top:12px">No finishers yet. Be the first!</p>`;
+  const me = b.you;
+  return `<div class="lbhead"><span>TODAY'S TOP ${Math.min(b.total, 20)}${b.total > 20 ? ` OF ${b.total}` : ""}</span><span>MOVES · TIME</span></div>
+    <ol class="lb">${b.top.map(r => `<li class="${me && r.rank === me.rank && r.nick === me.nick ? "me" : ""}">
+      <span class="rk">${r.rank}</span><span class="nk">${esc(r.nick)}</span><span class="sc">${r.moves} · ${fmtTime(r.ms)}</span></li>`).join("")}
+    ${me && me.rank > 20 ? `<li class="me"><span class="rk">${me.rank}</span><span class="nk">${esc(me.nick)}</span>
+      <span class="sc">${me.moves} · ${fmtTime(me.ms)}</span></li>` : ""}</ol>`;
+}
+const nextIn = () => {
+  const ms = DAILY_EPOCH + dailyNumber() * 864e5 - Date.now(), h = Math.floor(ms / 36e5), m = Math.floor(ms / 6e4) % 60;
+  return h ? `${h}h ${m}m` : `${m}m`;
+};
+
+function dailyResultCard(b) {
+  const d = save.daily, par = b.par;
+  openCard(`<div class="kicker">DAILY #${d.day} SOLVED</div>
+    <div class="bigtime">⏱ ${fmtTime(d.ms)}</div>
+    <p><b style="color:var(--text)">${d.moves} moves</b> · par ${par}${d.moves === par ? " · perfect route!" : ""}</p>
+    <p style="margin-top:4px">${d.rank ? `You're <b style="color:var(--gold)">#${d.rank}</b> of ${b.total} today.` : "You played without joining the leaderboard."}</p>
+    ${boardHTML(b)}
+    <p style="margin-top:10px;font-size:.82rem">Next puzzle in ${nextIn()}.</p>
+    <div class="row"><button class="alt" id="cardShare">Share</button><button class="go" id="cardDone">Done</button></div>
+    <div class="shared" id="cardShared"></div>`);
+  let shareFile = null;
+  makeDailyShareFile(d, par, b.total).then(f => { shareFile = f; });
+  const text = `Bumpuzzled 🧩 Daily #${d.day}\n${d.moves} moves (par ${par}) · ⏱ ${fmtTime(d.ms)}` +
+    (d.rank ? ` · #${d.rank} of ${b.total}` : "") + `\nCan you beat it? ${SHARE_URL}`;
+  $("cardShare").onclick = () => shareResult(text, shareFile, { daily: d.day });
+  $("cardDone").onclick = () => { closeCard(); daily = null; showHome(); };
+}
+
+async function showDailyBoard() {
+  const day = dailyNumber();
+  openCard(`<div class="kicker">DAILY #${day} LEADERBOARD</div><p>Loading…</p>`);
+  track("daily_board", { day });
+  const r = await api(`/board?day=${day}&device=${deviceId()}`);
+  if (!$("veil").classList.contains("on") || !$("card").textContent.includes(`DAILY #${day} LEADERBOARD`)) return;
+  const d = todaysDaily(), finished = d && d.moves;
+  if (r.ok && r.data.you && d) { Object.assign(d, { rank: r.data.you.rank, total: r.data.total }); persist(); }
+  openCard(`<div class="kicker">DAILY #${day} LEADERBOARD</div>
+    ${!r.ok ? `<p>${esc(r.error)}</p>` : `
+      ${finished ? `<p>You: <b style="color:var(--text)">${d.moves} moves · ${fmtTime(d.ms)}</b>${r.data.you ? ` · <b style="color:var(--gold)">#${r.data.you.rank}</b> of ${r.data.total}` : ""}</p>` : ""}
+      ${boardHTML(r.data)}`}
+    <p style="margin-top:10px;font-size:.82rem">${finished ? `Next puzzle in ${nextIn()}.` : "Fewest moves wins; ties go to the quickest."}</p>
+    <div class="row">${finished ? `<button class="alt" id="cardShare">Share</button>` : `<button class="alt" id="cardPlay">${d ? "Carry on" : "Play today's"}</button>`}
+      <button class="go" id="cardDone">Done</button></div>
+    <div class="shared" id="cardShared"></div>
+    ${r.ok && r.data.you ? `<button class="linkbtn" id="cardRemove">Remove me from the leaderboard</button>` : ""}`);
+  $("cardDone").onclick = () => { closeCard(); showHome(); };
+  if (finished) {
+    let shareFile = null;
+    const par = r.ok ? r.data.par : 0, total = r.ok ? r.data.total : 0;
+    makeDailyShareFile(d, par, total).then(f => { shareFile = f; });
+    const text = `Bumpuzzled 🧩 Daily #${d.day}\n${d.moves} moves${par ? ` (par ${par})` : ""} · ⏱ ${fmtTime(d.ms)}` +
+      (d.rank ? ` · #${d.rank} of ${total || d.total}` : "") + `\nCan you beat it? ${SHARE_URL}`;
+    $("cardShare").onclick = () => shareResult(text, shareFile, { daily: d.day });
+  } else $("cardPlay").onclick = showDailyIntro;
+  if (r.ok && r.data.you) $("cardRemove").onclick = () => {
+    openCard(`<div class="kicker">LEADERBOARD</div><h2>Remove yourself?</h2>
+      <p>This deletes all your daily results from the leaderboard. It can't be undone.</p>
+      <div class="shared bad" id="removeNote"></div>
+      <div class="row"><button class="alt" id="cardNo">Cancel</button><button class="go" id="cardYes">Remove me</button></div>`);
+    $("cardNo").onclick = showDailyBoard;
+    $("cardYes").onclick = async () => {
+      const x = await api(`/mine?device=${deviceId()}`, null, "DELETE");
+      if (!x.ok) { $("removeNote").textContent = x.error; return; }
+      if (d) { d.rank = 0; d.joined = false; persist(); }
+      track("daily_remove");
+      showDailyBoard();
+    };
+  };
+}
+
+// Share picture for the daily: the result and your character, but not the
+// board, so nobody can work out today's route before their own clock starts.
+function makeDailyShareFile(d, par, total) {
+  return new Promise(resolve => {
+    try {
+      const W = 1080, H = 1350, cv = document.createElement("canvas");
+      cv.width = W; cv.height = H;
+      const ctx = cv.getContext("2d"), K = curSkin();
+      const font = (w, px) => `${w} ${px}px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif`;
+      const bg = ctx.createRadialGradient(W / 2, H * .35, 50, W / 2, H * .45, H * .9);
+      bg.addColorStop(0, K.glow1); bg.addColorStop(.55, K.glow2); bg.addColorStop(1, K.bg);
+      ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+      ctx.textAlign = "center";
+      if ("letterSpacing" in ctx) ctx.letterSpacing = "8px";
+      ctx.font = font(900, 104);
+      const lg = ctx.createLinearGradient(0, 70, 0, 175);
+      lg.addColorStop(0, "#fff3c4"); lg.addColorStop(.55, "#ffcf5a"); lg.addColorStop(1, "#c98f1c");
+      ctx.fillStyle = lg; ctx.fillText("BUMPUZZLED", W / 2, 165);
+      if ("letterSpacing" in ctx) ctx.letterSpacing = "4px";
+      ctx.font = font(800, 52); ctx.fillStyle = "#9196cc";
+      ctx.fillText(`DAILY PUZZLE #${d.day}`, W / 2, 255);
+      if ("letterSpacing" in ctx) ctx.letterSpacing = "0px";
+      drawChar(ctx, curChar(), W / 2, 520, 170);
+      ctx.font = font(900, 120); ctx.fillStyle = "#ffcf5a";
+      ctx.fillText(`⏱ ${fmtTime(d.ms)}`, W / 2, 900);
+      ctx.font = font(800, 60); ctx.fillStyle = "#eef0ff";
+      ctx.fillText(`${d.moves} moves${par ? `  ·  par ${par}` : ""}`, W / 2, 1010);
+      if (d.rank) { ctx.font = font(700, 50); ctx.fillStyle = "#9196cc"; ctx.fillText(`#${d.rank} of ${total || d.total} today`, W / 2, 1090); }
+      ctx.font = font(700, 44); ctx.fillStyle = "#ffcf5a";
+      ctx.fillText("Can you beat it?  bumpuzzled.com", W / 2, 1265);
+      cv.toBlob(b => resolve(b ? new File([b], `bumpuzzled-daily-${d.day}.jpg`, { type: "image/jpeg" }) : null), "image/jpeg", .92);
+    } catch (e) { resolve(null); }
+  });
+}
+
 // ------------------------------------------------------------ input
 $("bU").onclick = () => move("U");
 $("bD").onclick = () => move("D");
@@ -1364,7 +1642,7 @@ $("bL").onclick = () => move("L");
 $("bR").onclick = () => move("R");
 $("undobtn").onclick = undo;
 $("resetbtn").onclick = restart;
-$("backbtn").onclick = () => { winSeq++; quitIfPlaying(); closeCard(); showHome(); };
+$("backbtn").onclick = () => { winSeq++; quitIfPlaying(); daily = null; closeCard(); showHome(); };
 $("helpbtn").onclick = showLegend;
 
 addEventListener("keydown", e => {
