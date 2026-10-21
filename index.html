@@ -44,7 +44,8 @@
 :root {
   --bg: #0e0f24; --bg2: #1a1c3a; --panel: #1d2045; --line: #2c3068;
   --top: #4a51a0; --top-hi: #5b63b8; --side: #2a2e66; --side-lo: #14163a;
-  --wall-top: #5d5a6e; --wall-side: #34323f;
+  --wall-top: #5d5a6e; --wall-side: #34323f; --wall-hi: #78748c; --wall-lo: #1f1e28;
+  --glow1: #262a5a; --glow2: #15173a; --sky: none; /* board theme colours: applyStyle() overrides these */
   --text: #eef0ff; --dim: #9196cc; --faint: #5b6099;
   --gold: #ffcf5a; --gold-lo: #c98f1c;
   --jump: #59d8ff; --spring: #ff9f43; --lever: #b48cff; --plank: #8c6fc0; --plank-side: #523f7a;
@@ -54,7 +55,7 @@
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { height: 100%; }
 body {
-  background: radial-gradient(120% 70% at 50% 35%, #262a5a 0%, #15173a 45%, var(--bg) 80%);
+  background: var(--sky), radial-gradient(120% 70% at 50% 35%, var(--glow1) 0%, var(--glow2) 45%, var(--bg) 80%);
   color: var(--text); font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
   user-select: none; -webkit-user-select: none; overscroll-behavior: none; overflow: hidden;
 }
@@ -84,7 +85,8 @@ button { font: inherit; color: inherit; border: none; background: none; cursor: 
   color: var(--faint); font-size: .85rem; text-align: center; display: flex; flex-direction: column; gap: 3px; }
 .soon b { color: var(--dim); font-size: .95rem; }
 .homefoot { margin-top: 22px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
-.pill.install { color: var(--gold); border-color: var(--gold); margin: -8px 0 18px; font-weight: 700; }
+.homebtns { display: flex; gap: 8px; margin: -8px 0 18px; }
+.pill.install { color: var(--gold); border-color: var(--gold); font-weight: 700; }
 .steps { text-align: left; margin-top: 10px; display: flex; flex-direction: column; gap: 10px; }
 .steps div { display: flex; gap: 10px; align-items: flex-start; color: var(--dim); font-size: .92rem; line-height: 1.4; }
 .steps b.n { flex: none; width: 24px; height: 24px; border-radius: 50%; background: var(--panel); border: 1px solid var(--line);
@@ -135,9 +137,9 @@ button { font: inherit; color: inherit; border: none; background: none; cursor: 
     linear-gradient(90deg, transparent 48%, rgba(0,0,0,.28) 48% 52%, transparent 52%) 0 0/100% 33% no-repeat,
     linear-gradient(90deg, transparent 23%, rgba(0,0,0,.28) 23% 27%, transparent 27% 73%, rgba(0,0,0,.28) 73% 77%, transparent 77%) 0 50%/100% 33% no-repeat,
     linear-gradient(90deg, transparent 48%, rgba(0,0,0,.28) 48% 52%, transparent 52%) 0 100%/100% 34% no-repeat,
-    linear-gradient(160deg, #78748c, var(--wall-top));
+    linear-gradient(160deg, var(--wall-hi), var(--wall-top));
   box-shadow: inset 0 0 0 1px rgba(255,255,255,.08); }
-.tile.w::after { height: var(--wh); background: linear-gradient(180deg, var(--wall-side), #1f1e28); }
+.tile.w::after { height: var(--wh); background: linear-gradient(180deg, var(--wall-side), var(--wall-lo)); }
 .tile.w::before { content: ""; position: absolute; left: 0; top: 100%; width: 100%; height: var(--wh); z-index: 1;
   transform-origin: top; transform: rotateX(-90deg) translateZ(.5px);
   background: repeating-linear-gradient(180deg, transparent 0 calc(var(--wh) / 2 - 1px), rgba(0,0,0,.25) 0 calc(var(--wh) / 2)); }
@@ -203,7 +205,7 @@ button { font: inherit; color: inherit; border: none; background: none; cursor: 
 .dc { --s: 42px; width: var(--s); height: var(--s); border-radius: 8px; position: relative; flex: none;
   background: linear-gradient(160deg, var(--top-hi), var(--top)); box-shadow: 0 5px 0 var(--side); }
 .dc svg { position: absolute; inset: 8%; width: 84%; height: 84%; overflow: visible; }
-.dc.w { background: linear-gradient(160deg, #78748c, var(--wall-top)); box-shadow: 0 8px 0 var(--wall-side); transform: translateY(-3px); }
+.dc.w { background: linear-gradient(160deg, var(--wall-hi), var(--wall-top)); box-shadow: 0 8px 0 var(--wall-side); transform: translateY(-3px); }
 .dc.h, .dc.gap { background: rgba(3,3,14,.7); box-shadow: inset 0 0 10px #000; }
 .dc.gap { box-shadow: inset 0 0 10px #000, inset 0 -6px 0 var(--plank-side); }
 .dc.br { background: repeating-linear-gradient(90deg, var(--plank) 0 30%, #6f56a0 0 33.3%); box-shadow: 0 5px 0 var(--plank-side); }
@@ -230,6 +232,30 @@ button { font: inherit; color: inherit; border: none; background: none; cursor: 
 .legend .item .dc { --s: 34px; }
 .legend .item div:last-child { font-size: .86rem; color: var(--dim); line-height: 1.35; }
 .legend .item b { color: var(--text); }
+
+/* ---------- style picker (characters + board themes) ---------- */
+.newdot { color: var(--gold); font-size: .72rem; font-weight: 800; margin-left: 4px; }
+.art { width: 46px; height: 46px; position: relative; flex: none; }
+.art svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.art.wide { width: 100%; height: 40px; }
+.swatch { width: 100%; height: 100%; border-radius: 9px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px;
+  padding: 6px 8px 9px; border: 1px solid rgba(255,255,255,.08); }
+.swatch i { border-radius: 3px; }
+.stylewrap { max-height: 54vh; overflow-y: auto; margin: 8px -6px 0; padding: 0 6px 4px; text-align: left; }
+.stylewrap h3 { color: var(--gold); font-size: .72rem; letter-spacing: 2px; text-transform: uppercase; margin: 12px 0 8px; }
+.stylegrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.opt { border-radius: 12px; background: var(--panel); border: 1px solid var(--line); padding: 9px 6px 7px; min-height: 44px;
+  display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: .78rem; color: var(--dim); }
+.opt b { font-weight: 700; }
+.opt.on { border-color: var(--gold); color: var(--text); box-shadow: 0 0 12px rgba(255,207,90,.25); }
+.opt.locked .art { opacity: .35; filter: grayscale(.7); }
+.opt .need { font-size: .7rem; color: var(--faint); }
+.card .unlockbox { margin-top: 12px; padding: 10px 12px; border-radius: 12px; background: rgba(255,207,90,.08);
+  border: 1px solid rgba(255,207,90,.35); display: flex; align-items: center; gap: 10px; text-align: left; color: var(--text); }
+.unlockbox .art.wide { width: 62px; height: 40px; }
+.unlockbox .ut { flex: 1; display: flex; flex-direction: column; font-size: .95rem; font-weight: 700; }
+.unlockbox .ut b { color: var(--gold); font-size: .72rem; letter-spacing: 1px; text-transform: uppercase; }
+.card .unlockbox .alt { padding: 11px 12px; white-space: nowrap; }
 </style>
 </head>
 <body>
@@ -237,7 +263,10 @@ button { font: inherit; color: inherit; border: none; background: none; cursor: 
 <section id="home" class="screen">
   <h1 class="logo">BUMPUZZLED</h1>
   <div class="tag">Every step is one-way. Think first.</div>
-  <button class="pill install" id="installbtn" style="display:none">📲 Install app</button>
+  <div class="homebtns">
+    <button class="pill" id="stylebtn">🎨 Style</button>
+    <button class="pill install" id="installbtn" style="display:none">📲 Install app</button>
+  </div>
   <div id="levelgrid"></div>
   <div class="homefoot">
     <button class="pill" id="howbtn">How to play</button>
@@ -306,12 +335,103 @@ const ICON = {
   star: `<svg viewBox="0 0 40 40"><path d="M20 4l4.6 9.6 10.4 1.4-7.6 7.2 2 10.4L20 27.6l-9.4 5 2-10.4L5 15l10.4-1.4z"
     fill="#7cf5a8" stroke="#1f7a45" stroke-width="1.6" stroke-linejoin="round"/></svg>`,
 };
-const PLAYER_SVG = `<svg viewBox="0 0 40 40"><defs><radialGradient id="pg" cx=".35" cy=".3" r=".8">
-  <stop offset="0" stop-color="#fff1b8"/><stop offset=".5" stop-color="var(--gold)"/><stop offset="1" stop-color="var(--gold-lo)"/>
-  </radialGradient></defs><circle cx="20" cy="22" r="16" fill="url(#pg)"/>
-  <g class="eyes"><ellipse cx="14.5" cy="20" rx="2.7" ry="3.6" fill="#2a1a00"/><ellipse cx="25.5" cy="20" rx="2.7" ry="3.6" fill="#2a1a00"/>
-  <circle cx="15.3" cy="18.7" r=".95" fill="#fff"/><circle cx="26.3" cy="18.7" r=".95" fill="#fff"/>
-  <path d="M13.6 26.2 Q20 32.4 26.4 26.2" fill="none" stroke="#2a1a00" stroke-width="2.3" stroke-linecap="round"/></g></svg>`;
+// Characters, unlocked with stars. Each is a list of shapes on a 40×40 grid
+// so the same data draws the SVG in the game and the picture in share images:
+// ["c", cx, cy, r, fill, stroke, width], ["e", cx, cy, rx, ry, ...],
+// ["r", x, y, w, h, corner, ...], ["p", pathData, ...]. Fill "G" is the body
+// gradient. `face` moves with the direction you push (look()); `back` is drawn
+// behind the body and `front` on top of everything.
+const eyes = (d, y = 20) => [["e", 14.5, y, 2.7, 3.6, d], ["e", 25.5, y, 2.7, 3.6, d],
+  ["c", 15.3, y - 1.3, .95, "#fff"], ["c", 26.3, y - 1.3, .95, "#fff"]];
+const smile = (d, dy = 0) => [["p", `M13.6 ${26.2 + dy} Q20 ${32.4 + dy} 26.4 ${26.2 + dy}`, null, d, 2.3]];
+const cheeks = c => [["e", 10.5, 25.5, 2.6, 1.6, c], ["e", 29.5, 25.5, 2.6, 1.6, c]];
+const BALL = [["c", 20, 22, 16, "G"]];
+const CHARACTERS = [
+  { id: "bumpy", name: "Bumpy", need: 0, grad: ["#fff1b8", "#ffcf5a", "#c98f1c"],
+    body: BALL, face: [...eyes("#2a1a00"), ...smile("#2a1a00")] },
+  { id: "minty", name: "Minty", need: 20, grad: ["#dcfff0", "#5fe0b0", "#1f8f68"],
+    body: BALL, face: [["r", 8.5, 15.5, 10.5, 7.5, 3.2, "#151824"], ["r", 21, 15.5, 10.5, 7.5, 3.2, "#151824"],
+      ["p", "M18.5 18.2h3", null, "#151824", 1.8],
+      ["p", "M10.8 18.4l3.4-1.4", null, "rgba(255,255,255,.55)", 1.2], ["p", "M23.3 18.4l3.4-1.4", null, "rgba(255,255,255,.55)", 1.2],
+      ["p", "M14 26.2 Q20 32.5 26 26.2 Z", "#0f3b2c"]] },
+  { id: "ruby", name: "Ruby", need: 40, grad: ["#ffd0d8", "#ff5d73", "#b51f3a"],
+    body: [...BALL, ...cheeks("#ffb3c0")], face: [...eyes("#3a0010"), ...smile("#3a0010")],
+    front: [["p", "M20 7.5 L12 3 Q10.5 7.5 12 12 Z", "#ffe066", "#c79a00", 1], ["p", "M20 7.5 L28 3 Q29.5 7.5 28 12 Z", "#ffe066", "#c79a00", 1],
+      ["c", 20, 7.5, 2.6, "#ffd23f", "#c79a00", 1]] },
+  { id: "frosty", name: "Frosty", need: 65, grad: ["#ffffff", "#a8e6ff", "#3d9bd4"],
+    body: [...BALL, ...cheeks("#ffc2d0")], face: [...eyes("#12324a", 21.8), ...smile("#12324a", 1.6)],
+    front: [["p", "M6 14 Q6.5 3.5 20 3.5 Q33.5 3.5 34 14 Z", "#ef4b67"], ["p", "M9 9h22", null, "rgba(255,255,255,.3)", 1.6],
+      ["r", 5, 11.5, 30, 5, 2.5, "#fff4f6"], ["c", 20, 3.5, 3.4, "#ffffff", "#dfe5ee", .8]] },
+  { id: "robo", name: "Robo", need: 95, grad: ["#f4f7fb", "#b4bccb", "#5d6677"],
+    back: [["p", "M20 8V3.5", null, "#5d6677", 1.8], ["c", 20, 2.8, 2.4, "#ff5d73"],
+      ["r", 2.2, 17, 4, 9, 1.8, "#7d8698"], ["r", 33.8, 17, 4, 9, 1.8, "#7d8698"]],
+    body: [["r", 5, 7.5, 30, 29, 8, "G"], ["r", 9, 13, 22, 13, 5.5, "#1a2133"], ["p", "M15 31.5h10", null, "#5d6677", 2]],
+    face: [["c", 15, 19.5, 2.9, "#59d8ff"], ["c", 25, 19.5, 2.9, "#59d8ff"], ["c", 15.9, 18.6, .9, "#e8fbff"], ["c", 25.9, 18.6, .9, "#e8fbff"]] },
+  { id: "boo", name: "Boo", need: 130, grad: ["#ffffff", "#ecebff", "#a6a1dc"],
+    body: [["p", "M5 21 A15 15 0 0 1 35 21 V35.5 L31.25 32.5 L27.5 35.5 L23.75 32.5 L20 35.5 L16.25 32.5 L12.5 35.5 L8.75 32.5 L5 35.5 Z", "G"],
+      ...cheeks("#ffc6dc")],
+    face: [["e", 14.5, 19.5, 3, 4, "#2d2560"], ["e", 25.5, 19.5, 3, 4, "#2d2560"], ["c", 15.4, 18, 1, "#fff"], ["c", 26.4, 18, 1, "#fff"],
+      ["e", 20, 27.5, 2.4, 2.8, "#2d2560"]] },
+  { id: "whiskers", name: "Whiskers", need: 170, grad: ["#ffe2bd", "#ffa04a", "#c4601a"],
+    back: [["p", "M6.5 15 L7.5 2.5 L17 8.5 Z", "#e8812e"], ["p", "M33.5 15 L32.5 2.5 L23 8.5 Z", "#e8812e"],
+      ["p", "M9 11.5 L9.6 6 L14 8.8 Z", "#ffb8c6"], ["p", "M31 11.5 L30.4 6 L26 8.8 Z", "#ffb8c6"]],
+    body: [...BALL, ["p", "M16.5 7.5l1.3 4M20 6.5v4.5M23.5 7.5l-1.3 4", null, "#c4601a", 1.6]],
+    face: [...eyes("#2a1400", 19.5), ["p", "M18.6 24h2.8l-1.4 1.7Z", "#ff7d96"],
+      ["p", "M17 27.2q1.5 1.5 3 0q1.5 1.5 3 0", null, "#2a1400", 1.5],
+      ["p", "M4.8 23.6l6 .8M5 27.2l5.8-.8M35.2 23.6l-6 .8M35 27.2l-5.8-.8", null, "#7a3a10", 1]] },
+  { id: "blip", name: "Blip", need: 215, grad: ["#ecffd0", "#93e35a", "#3f8f1c"],
+    back: [["p", "M14 8.5 L10.5 2.5", null, "#3f8f1c", 1.8], ["p", "M26 8.5 L29.5 2.5", null, "#3f8f1c", 1.8],
+      ["c", 10.2, 2.4, 2.3, "#d8ff8a"], ["c", 29.8, 2.4, 2.3, "#d8ff8a"]],
+    body: BALL, face: [["e", 14, 20.5, 3.6, 4.8, "#0f1d08"], ["e", 26, 20.5, 3.6, 4.8, "#0f1d08"],
+      ["c", 15.2, 18.6, 1.2, "#fff"], ["c", 27.2, 18.6, 1.2, "#fff"], ["p", "M16.5 28.5 Q20 31 23.5 28.5", null, "#0f1d08", 2]] },
+  { id: "majesty", name: "Majesty", need: 288, grad: ["#f6e6ff", "#b88cff", "#6a3fc0"],
+    body: [...BALL, ...cheeks("#e6b3ff")], face: [...eyes("#24104a"), ...smile("#24104a")],
+    front: [["p", "M9.5 12.5 L9 3.5 L14.5 8 L20 2 L25.5 8 L31 3.5 L30.5 12.5 Z", "#ffcf5a", "#b07a10", 1.1],
+      ["c", 20, 8.6, 1.6, "#ff5d73"], ["c", 14.3, 10, 1.2, "#59d8ff"], ["c", 25.7, 10, 1.2, "#59d8ff"]] },
+];
+const SHAPE_AT = { c: 4, e: 5, r: 6, p: 2 }; // where fill/stroke/width start in each shape
+let svgUid = 0; // every drawing gets its own gradient id (an id inside a hidden screen won't render)
+function charSVG(ch) {
+  const gid = "cg" + (++svgUid);
+  const out = s => {
+    const [f, st, sw] = s.slice(SHAPE_AT[s[0]]);
+    const paint = `fill="${f === "G" ? `url(#${gid})` : f || "none"}"` +
+      (st ? ` stroke="${st}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round"` : "");
+    if (s[0] === "c") return `<circle cx="${s[1]}" cy="${s[2]}" r="${s[3]}" ${paint}/>`;
+    if (s[0] === "e") return `<ellipse cx="${s[1]}" cy="${s[2]}" rx="${s[3]}" ry="${s[4]}" ${paint}/>`;
+    if (s[0] === "r") return `<rect x="${s[1]}" y="${s[2]}" width="${s[3]}" height="${s[4]}" rx="${s[5]}" ${paint}/>`;
+    return `<path d="${s[1]}" ${paint}/>`;
+  };
+  const list = a => (a || []).map(out).join("");
+  return `<svg viewBox="0 0 40 40"><defs><radialGradient id="${gid}" gradientUnits="userSpaceOnUse" cx="15.2" cy="15.6" r="25.6">
+    <stop offset="0" stop-color="${ch.grad[0]}"/><stop offset=".5" stop-color="${ch.grad[1]}"/><stop offset="1" stop-color="${ch.grad[2]}"/>
+    </radialGradient></defs>${list(ch.back)}${list(ch.body)}<g class="eyes">${list(ch.face)}</g>${list(ch.front)}</svg>`;
+}
+
+// Board themes, unlocked with stars. Only the board and background change;
+// buttons and cards keep the standard colours.
+const SKY = "radial-gradient(1.6px 1.6px at 30% 40%, #fff 50%, transparent) 0 0/170px 170px," +
+  "radial-gradient(1.2px 1.2px at 70% 20%, #cfd6ff 50%, transparent) 0 0/230px 230px," +
+  "radial-gradient(1px 1px at 50% 80%, #fff 50%, transparent) 40px 60px/120px 120px," +
+  "radial-gradient(1.4px 1.4px at 15% 75%, #b9c2ff 50%, transparent) 0 0/290px 290px";
+const SKINS = [
+  { id: "midnight", name: "Midnight", need: 0, top: "#4a51a0", topHi: "#5b63b8", side: "#2a2e66", sideLo: "#14163a",
+    wallHi: "#78748c", wallTop: "#5d5a6e", wallSide: "#34323f", wallLo: "#1f1e28", glow1: "#262a5a", glow2: "#15173a", bg: "#0e0f24" },
+  { id: "ice", name: "Ice", need: 30, top: "#3d7fb0", topHi: "#5aa0cf", side: "#22557f", sideLo: "#102b48",
+    wallHi: "#f2f9ff", wallTop: "#bcd9ee", wallSide: "#7598b4", wallLo: "#3f5a72", glow1: "#1d4f78", glow2: "#0f2c4c", bg: "#071528" },
+  { id: "jungle", name: "Jungle", need: 60, top: "#3b7d43", topHi: "#529a56", side: "#24552b", sideLo: "#112d16",
+    wallHi: "#a0805a", wallTop: "#7a5c3c", wallSide: "#4c3825", wallLo: "#2c2016", glow1: "#1f4d2a", glow2: "#102c18", bg: "#06160c" },
+  { id: "lava", name: "Lava", need: 100, top: "#4e4249", topHi: "#66575f", side: "#33282e", sideLo: "#1a1216",
+    wallHi: "#ffa456", wallTop: "#e0572a", wallSide: "#8e2a12", wallLo: "#4a1006", glow1: "#5c2014", glow2: "#2c0f0b", bg: "#130605" },
+  { id: "candy", name: "Candy", need: 150, top: "#8c3f94", topHi: "#a957ab", side: "#5a2464", sideLo: "#2e0f36",
+    wallHi: "#ffe3f0", wallTop: "#ffb4d6", wallSide: "#c56a98", wallLo: "#6e2c52", glow1: "#5e2a66", glow2: "#30143c", bg: "#170a1f" },
+  { id: "space", name: "Space", need: 210, top: "#2e3150", topHi: "#40446c", side: "#1b1d33", sideLo: "#0b0c18",
+    wallHi: "#b3abd4", wallTop: "#807a9e", wallSide: "#4a4562", wallLo: "#252233", glow1: "#1a1d3c", glow2: "#0b0c1e", bg: "#04040c", sky: SKY },
+];
+const SKIN_VARS = ["top", "topHi", "side", "sideLo", "wallHi", "wallTop", "wallSide", "wallLo", "glow1", "glow2", "bg"];
+const swatchHTML = k => `<div class="swatch" style="background:${k.sky ? k.sky + "," : ""}radial-gradient(120% 90% at 50% 30%, ${k.glow1}, ${k.bg})">${
+  [1, 1, 0, 1, 0, 1].map(f => `<i style="background:linear-gradient(160deg, ${f ? k.topHi : k.wallHi}, ${f ? k.top : k.wallTop});` +
+    `box-shadow:0 3px 0 ${f ? k.side : k.wallSide}"></i>`).join("")}</div>`;
 
 // What each tile is called and what it does — used by the intro cards,
 // the ? legend, and tapping a tile on the board.
@@ -394,6 +514,28 @@ const isUnlocked = i => unlockAll || i === 0 || !!save.stars[i - 1];
 
 const totalStars = () => LEVELS.reduce((n, _, i) => n + (save.stars[i] || 0), 0);
 
+// ------------------------------------------------------------ style
+// The chosen character and board theme (save.character / save.skin). Stars
+// never go down, so anything unlocked stays unlocked; ?all unlocks the lot.
+const styleOpen = it => unlockAll || totalStars() >= it.need;
+const curChar = () => CHARACTERS.find(c => c.id === save.character && styleOpen(c)) || CHARACTERS[0];
+const curSkin = () => SKINS.find(k => k.id === save.skin && styleOpen(k)) || SKINS[0];
+// Everything whose star requirement falls in (from, to]
+const newUnlocks = (from, to) => [
+  ...CHARACTERS.filter(c => c.need > from && c.need <= to).map(it => ({ kind: "character", it })),
+  ...SKINS.filter(k => k.need > from && k.need <= to).map(it => ({ kind: "skin", it }))];
+function applyStyle() {
+  const k = curSkin(), root = document.documentElement.style;
+  for (const v of SKIN_VARS) root.setProperty("--" + v.replace(/[A-Z]/g, m => "-" + m.toLowerCase()), k[v]);
+  root.setProperty("--sky", k.sky || "none");
+  document.querySelector('meta[name="theme-color"]').content = k.bg;
+  token.innerHTML = charSVG(curChar());
+}
+function pickStyle(kind, id) {
+  save[kind] = id; persist(); applyStyle();
+  track("style_select", { kind, id });
+}
+
 // ------------------------------------------------------------ analytics
 // Umami only: cookie-free and no personal data, so there's no cookie prompt or
 // notice. It loads only on the real site (local testing never pollutes the
@@ -429,7 +571,7 @@ function showPrivacy() {
   openCard(`<div class="kicker">PRIVACY</div><h2>What we collect</h2>
     <div class="privacy">
       <p>Bumpuzzled uses Umami, a privacy-friendly analytics service, to count players and see which levels people finish or get stuck on, so we can improve the game.</p>
-      <p>It records game events (level number, moves, stars, shares, installs) plus standard details like device type and country. No names, emails or accounts, and the game uses no cookies.</p>
+      <p>It records game events (level number, moves, stars, shares, installs, style picks) plus standard details like device type and country. No names, emails or accounts, and the game uses no cookies.</p>
       <p>Your progress is saved only on this device.</p>
       <p>Analytics is currently <b style="color:var(--text)">${on ? "on" : "off"}</b>.</p>
       <p>Questions or feedback? <a href="mailto:bumpuzzledgame@gmail.com?subject=Bumpuzzled" style="color:var(--gold)">bumpuzzledgame@gmail.com</a></p>
@@ -505,7 +647,42 @@ function showHome() {
   soon.innerHTML = "<b>More packs coming soon</b>Check back for new puzzles!";
   grid.appendChild(soon);
   $("soundbtn").textContent = save.sound ? "🔊 Sound on" : "🔇 Sound off";
+  const fresh = newUnlocks(save.styleSeen || 0, totalStars()).length;
+  $("stylebtn").innerHTML = "🎨 Style" + (fresh ? `<b class="newdot">NEW!</b>` : "");
 }
+
+function styleOptHTML(kind, it, on) {
+  const open = styleOpen(it);
+  return `<button class="opt${on ? " on" : ""}${open ? "" : " locked"}" data-kind="${kind}" data-id="${it.id}"
+    aria-label="${it.name}${open ? "" : ` (locked: ${it.need} stars)`}">
+    <div class="art${kind === "skin" ? " wide" : ""}">${kind === "skin" ? swatchHTML(it) : charSVG(it)}</div>
+    <b>${it.name}</b>${open ? "" : `<span class="need">🔒 ${it.need}★</span>`}</button>`;
+}
+function showStyle() {
+  const have = totalStars();
+  save.styleSeen = Math.max(save.styleSeen || 0, have); persist();
+  track("style_open");
+  openCard(`<div class="kicker">STYLE</div><h2>Make it yours</h2>
+    <p>Earn stars to unlock characters and board themes. You have <b style="color:var(--gold)">${have}★</b>.</p>
+    <div class="stylewrap">
+      <h3>Characters</h3><div class="stylegrid">${CHARACTERS.map(c => styleOptHTML("character", c, c === curChar())).join("")}</div>
+      <h3>Board themes</h3><div class="stylegrid">${SKINS.map(k => styleOptHTML("skin", k, k === curSkin())).join("")}</div>
+    </div>
+    <div class="shared" id="styleNote"></div>
+    <div class="row"><button class="go" id="cardOk">Done</button></div>`);
+  $("card").querySelectorAll(".opt").forEach(b => b.onclick = () => {
+    const kind = b.dataset.kind, it = (kind === "skin" ? SKINS : CHARACTERS).find(x => x.id === b.dataset.id);
+    if (!styleOpen(it)) {
+      $("styleNote").textContent = `${it.name} unlocks at ${it.need}★. ${it.need - have} more to go!`;
+      return;
+    }
+    $("card").querySelectorAll(`.opt[data-kind="${kind}"]`).forEach(o => o.classList.toggle("on", o === b));
+    $("styleNote").textContent = "";
+    pickStyle(kind, it.id);
+  });
+  $("cardOk").onclick = () => { closeCard(); showHome(); };
+}
+$("stylebtn").onclick = showStyle;
 $("soundbtn").onclick = () => { save.sound = !save.sound; persist(); showHome(); };
 $("howbtn").onclick = () => showHowTo();
 
@@ -574,8 +751,7 @@ let li = 0, lv, st, hist, busy = false, done = false;
 let tiles = [], cs = 50, gap = 5, TH = 10, WH = 26, TILT = 34;
 const scene = $("scene");
 const token = document.createElement("div");
-token.id = "token";
-token.innerHTML = PLAYER_SVG;
+token.id = "token"; // its drawing is the chosen character (applyStyle)
 const shadow = document.createElement("div");
 shadow.id = "shadow";
 
@@ -858,9 +1034,12 @@ function win() {
   track("level_complete", { level_number: li + 1, level_name: LEVELS[li].name, moves, par, stars,
     first_clear: !save.stars[li] });
   playing = false;
+  const starsBefore = totalStars();
   save.stars[li] = Math.max(save.stars[li] || 0, stars);
   if (!save.best[li] || moves < save.best[li]) save.best[li] = moves;
   persist();
+  const unlocked = newUnlocks(starsBefore, totalStars());
+  unlocked.forEach(u => track("style_unlock", { kind: u.kind, id: u.it.id }));
   setTimeout(() => {
     if (seq !== winSeq) return;
     const [x, y] = px(st.r, st.c);
@@ -880,6 +1059,10 @@ function win() {
       ${last ? `<div class="morebox"><b>🎉 You've cleared every pack!</b>
         New packs are on the way — check back soon.
         <span>${totalStars()} of ${LEVELS.length * 3} stars earned. Go back for the ones you missed!</span></div>` : ""}
+      ${unlocked.map(({ kind, it }) => `<div class="unlockbox">
+        <div class="art${kind === "skin" ? " wide" : ""}">${kind === "skin" ? swatchHTML(it) : charSVG(it)}</div>
+        <div class="ut"><b>New ${kind === "skin" ? "board theme" : "character"}!</b>${it.name}</div>
+        <button class="alt" data-kind="${kind}" data-id="${it.id}">Use it</button></div>`).join("")}
       <div class="row">
         <button class="alt" id="cardRetry">Retry</button>
         <button class="alt" id="cardShare">Share</button>
@@ -887,6 +1070,11 @@ function win() {
       </div>
       <div class="shared" id="cardShared"></div>`);
     $("cardRetry").onclick = restart;
+    $("card").querySelectorAll(".unlockbox button").forEach(b => b.onclick = () => {
+      pickStyle(b.dataset.kind, b.dataset.id);
+      b.textContent = "✓ On"; b.disabled = true;
+      makeShareFile(li, moves, par, stars).then(f => { shareFile = f; }); // share picture in the new look
+    });
     let shareFile = null;
     makeShareFile(li, moves, par, stars).then(f => { shareFile = f; });
     $("cardShare").onclick = () => shareResult(li, moves, par, stars, shareFile);
@@ -916,22 +1104,38 @@ function starPath(ctx, cx, cy, R) {
   }
   ctx.closePath();
 }
-function drawBall(ctx, cx, cy, R) {
+// The chosen character, from the same shape data as its SVG (an SVG image
+// drawn onto a canvas can block saving the picture on some phones).
+function drawChar(ctx, ch, cx, cy, R) {
   ctx.fillStyle = "rgba(0,0,0,.35)";
   ctx.beginPath(); ctx.ellipse(cx, cy + R * .95, R * .75, R * .25, 0, 0, Math.PI * 2); ctx.fill();
-  const g = ctx.createRadialGradient(cx - R * .3, cy - R * .4, R * .1, cx, cy, R * 1.1);
-  g.addColorStop(0, "#fff1b8"); g.addColorStop(.5, "#ffcf5a"); g.addColorStop(1, "#c98f1c");
-  ctx.fillStyle = g;
-  ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = "#2a1a00";
-  for (const ex of [-.34, .34]) { ctx.beginPath(); ctx.ellipse(cx + ex * R, cy - R * .12, R * .17, R * .23, 0, 0, Math.PI * 2); ctx.fill(); }
-  ctx.fillStyle = "#fff";
-  for (const ex of [-.29, .39]) { ctx.beginPath(); ctx.arc(cx + ex * R, cy - R * .2, R * .06, 0, Math.PI * 2); ctx.fill(); }
-  ctx.strokeStyle = "#2a1a00"; ctx.lineWidth = R * .14; ctx.lineCap = "round";
-  ctx.beginPath(); ctx.moveTo(cx - R * .4, cy + R * .27); ctx.quadraticCurveTo(cx, cy + R * .66, cx + R * .4, cy + R * .27); ctx.stroke();
+  const k = R / 16;
+  ctx.save();
+  ctx.translate(cx - 20 * k, cy - 22 * k); ctx.scale(k, k);
+  const g = ctx.createRadialGradient(15.2, 15.6, 0, 15.2, 15.6, 25.6);
+  g.addColorStop(0, ch.grad[0]); g.addColorStop(.5, ch.grad[1]); g.addColorStop(1, ch.grad[2]);
+  for (const s of [...(ch.back || []), ...ch.body, ...ch.face, ...(ch.front || [])]) {
+    const [f, st, sw] = s.slice(SHAPE_AT[s[0]]);
+    let p;
+    if (s[0] === "p") p = new Path2D(s[1]);
+    else {
+      p = new Path2D();
+      if (s[0] === "c") p.arc(s[1], s[2], s[3], 0, Math.PI * 2);
+      else if (s[0] === "e") p.ellipse(s[1], s[2], s[3], s[4], 0, 0, Math.PI * 2);
+      else {
+        const [, x, y, w, h, r] = s;
+        p.moveTo(x + r, y); p.arcTo(x + w, y, x + w, y + h, r); p.arcTo(x + w, y + h, x, y + h, r);
+        p.arcTo(x, y + h, x, y, r); p.arcTo(x, y, x + w, y, r); p.closePath();
+      }
+    }
+    if (f) { ctx.fillStyle = f === "G" ? g : f; ctx.fill(p); }
+    if (st) { ctx.strokeStyle = st; ctx.lineWidth = sw; ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.stroke(p); }
+  }
+  ctx.restore();
 }
 // The level as it starts: flat slabs with a front edge, same colours as the game.
 function drawBoard(ctx, grid, x0, y0, cell) {
+  const K = curSkin();
   const s = Math.round(cell * .9), ed = Math.max(3, Math.round(s * .14)), rad = Math.round(s * .14);
   let start = null;
   grid.forEach((row, r) => [...row].forEach((ch, c) => {
@@ -942,11 +1146,11 @@ function drawBoard(ctx, grid, x0, y0, cell) {
       return;
     }
     const wall = ch === "#";
-    const [top, top2, edge] = wall ? ["#8c88a4", "#5d5a6e", "#2a2833"]
+    const [top, top2, edge] = wall ? [K.wallHi, K.wallTop, K.wallLo]
       : ch === "E" ? ["#8af0b0", "#3fb872", "#1b5a35"]
       : ch === "T" ? ["#7a68bd", "#4b3f86", "#2a2450"]
       : ch === "b" ? ["#9a7dd0", "#7a5fb0", "#523f7a"]
-      : ["#5b63b8", "#4a51a0", "#262a5c"];
+      : [K.topHi, K.top, K.side];
     const lift = wall ? ed : 0;
     ctx.fillStyle = edge; rr(ctx, x, y + ed - lift, s, s + lift, rad); ctx.fill();
     const g = ctx.createLinearGradient(x, y - lift, x + s, y + s - lift);
@@ -994,7 +1198,7 @@ function drawBoard(ctx, grid, x0, y0, cell) {
       ctx.fillStyle = "#e9fff1"; starPath(ctx, cx, ty, s * .3); ctx.fill();
     } else if (ch === "P") start = [cx, ty];
   }));
-  if (start) drawBall(ctx, start[0], start[1] - s * .08, s * .34);
+  if (start) drawChar(ctx, curChar(), start[0], start[1] - s * .08, s * .34);
 }
 
 function makeShareCanvas(i, moves, par, stars) {
@@ -1004,8 +1208,19 @@ function makeShareCanvas(i, moves, par, stars) {
   const ctx = cv.getContext("2d");
   const font = (w, px) => `${w} ${px}px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif`;
   const bg = ctx.createRadialGradient(W / 2, H * .35, 50, W / 2, H * .45, H * .9);
-  bg.addColorStop(0, "#2c3170"); bg.addColorStop(.55, "#15173a"); bg.addColorStop(1, "#0b0c1f");
+  const K = curSkin();
+  bg.addColorStop(0, K.glow1); bg.addColorStop(.55, K.glow2); bg.addColorStop(1, K.bg);
   ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+  if (K.sky) { // a fixed scatter of stars
+    let seed = 7;
+    const rnd = () => (seed = seed * 16807 % 2147483647) / 2147483647;
+    ctx.fillStyle = "#fff";
+    for (let n = 0; n < 110; n++) {
+      ctx.globalAlpha = .3 + rnd() * .6;
+      ctx.beginPath(); ctx.arc(rnd() * W, rnd() * H, 1 + rnd() * 2.2, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
   ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
   // logo
   if ("letterSpacing" in ctx) ctx.letterSpacing = "8px";
@@ -1082,7 +1297,7 @@ async function shareResult(i, moves, par, stars, file) {
   }
 }
 
-const PLAYER_DEMO = `<div class="dc">${PLAYER_SVG}</div>`;
+const playerDemo = () => `<div class="dc">${charSVG(curChar())}</div>`;
 
 function showIntros(grid) {
   const kinds = new Set(grid.join("").split("").map(KIND));
@@ -1097,7 +1312,7 @@ function showIntros(grid) {
     if (k === "basics") {
       title = "Every step is one-way";
       text = "Swipe or use the arrows to move. Each tile falls away the moment you step off it, so you can never go back the way you came. Plan your route to the star. Undo is free.";
-      demo = `<div class="dc fell"></div><div class="dc fell"></div>${PLAYER_DEMO}${demoCell(".")}${demoCell("E")}`;
+      demo = `<div class="dc fell"></div><div class="dc fell"></div>${playerDemo()}${demoCell(".")}${demoCell("E")}`;
     } else if (k === "T") {
       title = "Lever & bridges";
       text = INFO.T[1] + " " + INFO.B[1].replace(/ A lever.*$/, "");
@@ -1211,6 +1426,7 @@ addEventListener("resize", () => {
 })();
 
 initAnalytics();
+applyStyle();
 showHome();
 if (!save.seen.length) startLevel(0);
 
