@@ -262,7 +262,7 @@ button { font: inherit; color: inherit; border: none; background: none; cursor: 
   background: linear-gradient(135deg, rgba(255,207,90,.16), rgba(255,207,90,.04)); border: 1px solid rgba(255,207,90,.5);
   display: flex; align-items: center; gap: 12px; box-shadow: 0 5px 0 #0b0c20; }
 .daily:active { transform: translateY(3px); box-shadow: 0 2px 0 #0b0c20; }
-.daily .di { font-size: 1.9rem; flex: none; }
+.daily .dc { --s: 40px; margin: 0 4px 5px 2px; } /* the exit tile: the phone's calendar emoji showed a fixed wrong date */
 .daily b { display: block; color: var(--gold); font-size: .75rem; letter-spacing: 2px; }
 .daily span { display: block; color: var(--text); font-size: 1rem; font-weight: 800; }
 .daily small { display: block; color: var(--dim); font-size: .8rem; margin-top: 1px; }
@@ -1441,7 +1441,7 @@ setInterval(() => { if (daily && !done) tickClock(); }, 500);
 function renderDailyBtn() {
   const day = dailyNumber(), d = todaysDaily(), b = $("dailybtn");
   b.style.display = day >= 1 ? "" : "none";
-  b.innerHTML = `<div class="di">📅</div><div><b>DAILY PUZZLE #${day}</b>` + (d && d.moves
+  b.innerHTML = `${demoCell("E")}<div><b>DAILY PUZZLE #${day}</b>` + (d && d.moves
     ? `<span>Solved: ${d.moves} moves · ${fmtTime(d.ms)}</span><small>${d.rank ? `#${d.rank} of ${d.total} today · ` : ""}see the leaderboard</small>`
     : d ? `<span>Your clock is running!</span><small>Tap to carry on</small>`
     : `<span>Same board for everyone</span><small>Fewest moves wins · new every day</small>`) + `</div>`;
