@@ -1,6 +1,6 @@
 // Bump CACHE whenever any shipped file changes, or returning players keep
 // running the old version. verify.py checks this against origin/main.
-const CACHE = "bumpuzzled-v18";
+const CACHE = "bumpuzzled-v19";
 const ASSETS = ["./", "./index.html", "./game-core.js", "./levels.js", "./manifest.webmanifest", "./icon.svg", "./icon-192.png", "./icon-512.png",
   "./icon-maskable-512.png", "./apple-touch-icon.png"];
 

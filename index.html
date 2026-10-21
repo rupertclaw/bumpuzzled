@@ -95,14 +95,6 @@ button { font: inherit; color: inherit; border: none; background: none; cursor: 
 .more a { color: var(--gold); text-decoration: underline; display: inline-block; padding: 6px 2px; }
 .more { line-height: 1.6; }
 .linkbtn { color: var(--faint); font-size: .85rem; text-decoration: underline; padding: 12px 14px; min-height: 44px; }
-.consent { position: fixed; left: 12px; right: 12px; bottom: max(12px, env(safe-area-inset-bottom)); z-index: 30;
-  max-width: 440px; margin: 0 auto; background: var(--bg2); border: 1px solid var(--line); border-radius: 16px;
-  padding: 14px 16px; box-shadow: 0 12px 40px rgba(0,0,0,.6); display: none; animation: rise .25s ease; }
-.consent.on { display: block; }
-.consent p { color: var(--dim); font-size: .88rem; line-height: 1.4; }
-.consent .row { display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px; }
-.consent .go { background: var(--gold); color: #3a2600; font-weight: 800; padding: 10px 22px; border-radius: 12px; }
-.consent .alt { background: var(--panel); border: 1px solid var(--line); color: var(--dim); padding: 10px 16px; border-radius: 12px; }
 .card .privacy { text-align: left; font-size: .88rem; }
 .card .privacy p + p { margin-top: 8px; }
 .pill { padding: 10px 16px; border-radius: 12px; background: var(--panel); border: 1px solid var(--line);
@@ -286,13 +278,6 @@ button { font: inherit; color: inherit; border: none; background: none; cursor: 
 
 <div class="veil" id="veil"><div class="card" id="card"></div></div>
 
-<div class="consent" id="consent" role="dialog" aria-label="Analytics cookies">
-  <p>We use analytics cookies to see which levels players enjoy and where they get stuck, so we can make the game better.</p>
-  <div class="row">
-    <button class="alt" id="consentNo">No thanks</button>
-    <button class="go" id="consentYes">OK</button>
-  </div>
-</div>
 
 <script src="game-core.js"></script>
 <script src="levels.js"></script>
@@ -410,86 +395,42 @@ const isUnlocked = i => unlockAll || i === 0 || !!save.stars[i - 1];
 const totalStars = () => LEVELS.reduce((n, _, i) => n + (save.stars[i] || 0), 0);
 
 // ------------------------------------------------------------ analytics
-// Google Analytics 4, on the production site only (local testing doesn't
-// pollute the numbers; add ?ga_debug to test elsewhere). UK/EU/EEA/CH:
-// analytics cookies are off by default (Google consent mode, region-based)
-// until the player taps OK. The banner shows when the device's time zone is in
-// Europe; anyone Google places in those regions stays cookie-free without an OK.
-const GA_ID = "G-R35C5BTKY6";
-const GA_DEBUG = /[?&]ga_debug\b/.test(location.search);
-const GA_ON = location.hostname === "bumpuzzled.com" || GA_DEBUG;
-const CONSENT_REGIONS = ["AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR", "HU", "IE",
-  "IT", "LV", "LT", "LU", "MT", "NL", "PL", "PT", "RO", "SK", "SI", "ES", "SE", "IS", "LI", "NO", "GB", "CH"];
-window.dataLayer = window.dataLayer || [];
-function gtag() { dataLayer.push(arguments); }
+// Umami only: cookie-free and no personal data, so there's no cookie prompt or
+// notice. It loads only on the real site (local testing never pollutes the
+// numbers), and the Privacy card's switch (save.analyticsOff) turns it off on a
+// device. Google Analytics was removed 2026-10-21: it missed EU players who
+// declined its cookie and anyone whose browser blocked it.
 const isInstalled = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
-// Umami: cookie-free, no personal data, so no consent is needed: it also counts players who say
-// "No thanks" to Google's cookie, or whose ad blocker stops Google. Production site only.
-// save.consent is the answer to the cookie banner (Google only); save.analyticsOff is the Privacy
-// card's off switch, which stops both. Before Umami, "No thanks" also meant "off", so anyone who
-// had already said no starts with analytics off.
 const UMAMI_ID = "eb46ca5a-dd66-486e-87c6-cdfd8293ed29";
 const UMAMI_ON = location.hostname === "bumpuzzled.com";
-if (save.analyticsOff === undefined) { save.analyticsOff = save.consent === "denied"; persist(); }
+// earlier versions: "No thanks" to Google's cookie also meant "analytics off"
+if (save.analyticsOff === undefined) save.analyticsOff = save.consent === "denied";
+delete save.consent; delete save.noticeSeen; persist(); // left over from the old cookie banner
 const umamiQueue = []; // events made before Umami's script arrives (capped, in case it's blocked)
-function umamiTrack(name, params) {
+function track(name, params) {
   if (!UMAMI_ON || save.analyticsOff) return;
   if (window.umami && window.umami.track) window.umami.track(name, params || {});
   else if (umamiQueue.length < 50) umamiQueue.push([name, params]);
 }
-function track(name, params) {
-  if (GA_ON && !save.analyticsOff && save.consent !== "denied") gtag("event", name, params || {});
-  umamiTrack(name, params);
-}
-
-function inEuropeTZ() {
-  try {
-    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
-    return tz.startsWith("Europe/") || /^(Atlantic\/(Canary|Madeira|Azores|Reykjavik|Faroe)|Asia\/(Nicosia|Famagusta))$/.test(tz);
-  } catch (e) { return false; }
-}
 
 function initAnalytics() {
-  if (UMAMI_ON && !save.analyticsOff) {
-    const u = document.createElement("script");
-    u.defer = true; u.src = "https://cloud.umami.is/script.js";
-    u.dataset.websiteId = UMAMI_ID; u.dataset.domains = "bumpuzzled.com";
-    u.onload = () => { for (const [name, params] of umamiQueue.splice(0)) umamiTrack(name, params); };
-    document.head.appendChild(u);
-  }
-  if (!GA_ON || save.analyticsOff) return;
-  const off = { ad_storage: "denied", ad_user_data: "denied", ad_personalization: "denied" };
-  gtag("consent", "default", { ...off, analytics_storage: "granted" });
-  gtag("consent", "default", { ...off, analytics_storage: "denied", region: CONSENT_REGIONS });
-  if (save.consent) gtag("consent", "update", { analytics_storage: save.consent });
-  gtag("js", new Date());
-  const cfg = { user_properties: { display_mode: isInstalled() ? "installed" : "browser" } };
-  if (GA_DEBUG) cfg.debug_mode = true;
-  gtag("config", GA_ID, cfg);
-  const sc = document.createElement("script");
-  sc.async = true;
-  sc.src = "https://www.googletagmanager.com/gtag/js?id=" + GA_ID;
-  document.head.appendChild(sc);
+  if (!UMAMI_ON || save.analyticsOff) return;
+  const u = document.createElement("script");
+  u.defer = true; u.src = "https://cloud.umami.is/script.js";
+  u.dataset.websiteId = UMAMI_ID; u.dataset.domains = "bumpuzzled.com";
+  u.onload = () => { for (const [name, params] of umamiQueue.splice(0)) track(name, params); };
+  document.head.appendChild(u);
   track("app_open", { display_mode: isInstalled() ? "installed" : "browser" });
   addEventListener("appinstalled", () => track("app_installed"));
-  if (!save.consent && inEuropeTZ()) $("consent").classList.add("on");
 }
-
-function setConsent(choice) {
-  save.consent = choice; persist();
-  if (GA_ON) gtag("consent", "update", { analytics_storage: choice });
-  $("consent").classList.remove("on");
-}
-$("consentYes").onclick = () => setConsent("granted");
-$("consentNo").onclick = () => setConsent("denied");
 
 function showPrivacy() {
   const on = !save.analyticsOff;
   openCard(`<div class="kicker">PRIVACY</div><h2>What we collect</h2>
     <div class="privacy">
-      <p>Bumpuzzled uses Google Analytics and Umami to count players and see which levels people finish or get stuck on, so we can improve the game.</p>
-      <p>They record game events (level number, moves, stars, shares, installs) plus standard details like device type and approximate location (country/city). No names, emails or accounts.</p>
-      <p>Your progress is saved only on this device. In the UK and EU, Google's analytics cookies are only used if you say OK. Umami uses no cookies at all.</p>
+      <p>Bumpuzzled uses Umami, a privacy-friendly analytics service, to count players and see which levels people finish or get stuck on, so we can improve the game.</p>
+      <p>It records game events (level number, moves, stars, shares, installs) plus standard details like device type and country. No names, emails or accounts, and the game uses no cookies.</p>
+      <p>Your progress is saved only on this device.</p>
       <p>Analytics is currently <b style="color:var(--text)">${on ? "on" : "off"}</b>.</p>
       <p>Questions or feedback? <a href="mailto:bumpuzzledgame@gmail.com?subject=Bumpuzzled" style="color:var(--gold)">bumpuzzledgame@gmail.com</a></p>
     </div>
@@ -497,8 +438,7 @@ function showPrivacy() {
       <button class="alt" id="privToggle">${on ? "Turn analytics off" : "Turn analytics on"}</button>
       <button class="go" id="cardOk">Done</button>
     </div>`);
-  // off stops both services (and declines Google's cookie); on allows both
-  $("privToggle").onclick = () => { save.analyticsOff = on; setConsent(on ? "denied" : "granted"); showPrivacy(); };
+  $("privToggle").onclick = () => { save.analyticsOff = on; persist(); showPrivacy(); };
   $("cardOk").onclick = closeCard;
 }
 $("privacybtn").onclick = showPrivacy;

@@ -85,4 +85,5 @@ python verify.py      # full ship check (needs node)
 - 2026-10-19: Umami (cookie-free analytics) added alongside Google Analytics, because GA misses EU players who decline cookies and ad-blocker users. Privacy card's switch now turns both off; the cookie banner only governs Google's cookie.
 - 2026-10-20: SEO basics: keyword title ("Bumpuzzled – Free Brain-Teaser Puzzle Game"), canonical link, schema.org VideoGame data, the logo is now the page's h1, a short description at the bottom of the home screen, robots.txt and sitemap.xml.
 - 2026-10-20: Packs 5 "Legend" and 6 "Mythic" (levels 65–96, built 2026-10-16 with the tightness filter: par 16–26, safe ≈1.00) released. Packs 7–8 being built as the next held-back promo packs.
+- 2026-10-21: Google Analytics, its UK/EU cookie banner and the GA custom setup removed; Umami (cookie-free) is the only analytics, so no consent prompt is needed. Matches Kablamagram. Privacy card now says the game uses no cookies.
 - Planned (on hold — owner wants to think about it): level editor + share-by-URL (levels are small JSON, encode into the link hash).
