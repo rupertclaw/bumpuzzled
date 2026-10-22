@@ -280,6 +280,21 @@ button { font: inherit; color: inherit; border: none; background: none; cursor: 
 .bigtime { font-size: 2.1rem; font-weight: 900; color: var(--gold); margin: 2px 0 4px; font-variant-numeric: tabular-nums; }
 .card .shared.bad { color: var(--bad); }
 #clockwrap { display: none; } #clockwrap.on { display: inline; }
+.pastlink { margin: -10px 0 12px; padding: 10px 16px; min-height: 44px; color: var(--gold); font-size: .88rem; font-weight: 700; }
+.pastlist { margin-top: 12px; max-height: 52vh; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; text-align: left; }
+.pastrow { display: flex; align-items: center; gap: 8px; padding: 6px 6px 6px 12px; border-radius: 12px;
+  background: var(--panel); border: 1px solid var(--line); }
+.pastrow .pastday { flex: 1; min-width: 0; font-size: .8rem; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pastrow .pastday b { display: block; color: var(--text); font-size: .95rem; }
+.pastrow .pastgo { min-height: 40px; padding: 8px 12px; border-radius: 10px; font-size: .84rem; font-weight: 800; white-space: nowrap; }
+.pastgo.play { background: var(--gold); color: #3a2600; }
+.pastgo.resume { border: 1px solid var(--gold); color: var(--gold); }
+.pastgo.result { background: rgba(95,224,143,.12); border: 1px solid rgba(95,224,143,.35); color: var(--exit); }
+.pastrow .pastlb { width: 40px; height: 40px; flex: none; border-radius: 10px; font-size: 1.05rem;
+  background: rgba(255,255,255,.04); border: 1px solid var(--line); }
+@media (max-width: 360px) { /* narrow phones: room for the past-puzzle rows */
+  .veil { padding: 12px; } .card { padding: 20px 14px 16px; }
+  .pastrow { padding-left: 10px; gap: 6px; } .pastrow .pastgo { padding: 8px 10px; } }
 </style>
 </head>
 <body>
@@ -292,6 +307,7 @@ button { font: inherit; color: inherit; border: none; background: none; cursor: 
     <button class="pill install" id="installbtn" style="display:none">📲 Install app</button>
   </div>
   <button class="daily" id="dailybtn" style="display:none"></button>
+  <button class="pastlink" id="pastbtn" style="display:none">Past daily puzzles ›</button>
   <div id="levelgrid"></div>
   <div class="homefoot">
     <button class="pill" id="howbtn">How to play</button>
@@ -674,6 +690,8 @@ function showHome() {
   grid.appendChild(soon);
   $("soundbtn").textContent = save.sound ? "🔊 Sound on" : "🔇 Sound off";
   renderDailyBtn();
+  archiveDaily();
+  $("pastbtn").style.display = dailyNumber() >= 2 ? "" : "none";
   const fresh = newUnlocks(save.styleSeen || 0, totalStars()).length;
   $("stylebtn").innerHTML = "🎨 Style" + (fresh ? `<b class="newdot">NEW!</b>` : "");
 }
@@ -778,6 +796,7 @@ let li = 0, lv, st, hist, busy = false, done = false;
 let cur = null;      // what's on the board: a LEVELS entry, or the daily puzzle
 let daily = null;    // the daily puzzle's {day, startedAt, offset, par, joined} while it's open
 let moveDirs = [];   // the moves so far (U/D/L/R), kept alongside hist: the daily sends this route
+let past = null;     // an earlier daily being replayed from Past puzzles: {day, par, prevMs, openedAt, finalMs}
 let tiles = [], cs = 50, gap = 5, TH = 10, WH = 26, TILT = 34;
 const scene = $("scene");
 const token = document.createElement("div");
@@ -787,14 +806,14 @@ shadow.id = "shadow";
 
 let playing = false;   // a level is open and not yet won (for level_quit)
 function quitIfPlaying() {
-  if (playing && !done && hist.length && !daily) track("level_quit", { level_number: li + 1, moves: hist.length });
+  if (playing && !done && hist.length && !daily && !past) track("level_quit", { level_number: li + 1, moves: hist.length });
   playing = false;
 }
 
 function startLevel(i) {
   winSeq++;
   quitIfPlaying();
-  daily = null;
+  daily = null; past = null;
   li = i;
   cur = LEVELS[i];
   openBoard(`LEVEL ${i + 1} OF ${LEVELS.length}`, cur.sol.length);
@@ -813,7 +832,7 @@ function openBoard(label, par) {
   $("lvname").textContent = cur.name;
   $("hint").textContent = cur.hint || "";
   $("par").textContent = par;
-  $("clockwrap").classList.toggle("on", !!daily);
+  $("clockwrap").classList.toggle("on", !!(daily || past));
   setMsg("");
   buildBoard();
   paint();
@@ -949,6 +968,7 @@ function move(dir) {
   hist.push(st);
   moveDirs.push(dir);
   st = res.st;
+  savePast();
   updateCounter();
   animateMove(prev, res);
   paint(prev);
@@ -1043,11 +1063,12 @@ function animateMove(prev, res) {
 }
 
 function undo() {
-  if (busy || !hist.length || (daily && done)) return; // a finished daily stays finished
+  if (busy || !hist.length || ((daily || past) && done)) return; // a finished daily stays finished
   winSeq++;
   if (done) { done = false; closeCard(); }
   st = hist.pop();
   moveDirs.pop();
+  savePast();
   paint();
   placeToken();
   updateCounter();
@@ -1056,17 +1077,19 @@ function undo() {
 }
 
 function restart() {
-  if (busy || (daily && done)) return;
+  if (busy || ((daily || past) && done)) return;
   winSeq++;
-  if (hist.length && !done && !daily) track("level_restart", { level_number: li + 1, moves: hist.length });
+  if (hist.length && !done && !daily && !past) track("level_restart", { level_number: li + 1, moves: hist.length });
   done = false; closeCard();
   st = initialState(lv); hist = []; moveDirs = [];
+  savePast();
   paint(); placeToken(); updateCounter(); setMsg("");
 }
 
 let winSeq = 0;   // bumps on every level start/restart/undo so a stale win card never shows
 function win() {
   if (daily) return winDaily();
+  if (past) return winPast();
   done = true;
   const seq = ++winSeq;
   const moves = hist.length, par = LEVELS[li].sol.length;
@@ -1391,6 +1414,7 @@ function showLegend() {
 function showHowTo() {
   openCard(`<div class="kicker">HOW TO PLAY</div><h2>Every step is one-way</h2>
     <p>Swipe or use the arrows to move. Every tile falls away once you step off it — plan your whole route to the star. Undo is free and unlimited. Match par for three stars.</p>
+    <p style="margin-top:8px">New every day: the <b style="color:var(--text)">Daily puzzle</b>, the same board for everyone. Missed one? Play it from <b style="color:var(--text)">Past daily puzzles</b> (just for fun: past puzzles don't go on the leaderboard).</p>
     ${legendHTML(["H", "J", "S", "T", "B", "1"])}
     <div class="row"><button class="go" id="cardOk">Got it</button></div>`);
   $("cardOk").onclick = closeCard;
@@ -1433,10 +1457,11 @@ async function api(path, body, method) {
 }
 
 function tickClock() {
+  if (past) { $("clock").textContent = fmtTime(pastElapsed()); return; }
   if (!daily) return;
   $("clock").textContent = fmtTime((done && daily.finalMs != null) ? daily.finalMs : Date.now() + daily.offset - daily.startedAt);
 }
-setInterval(() => { if (daily && !done) tickClock(); }, 500);
+setInterval(() => { if ((daily || past) && !done) tickClock(); }, 500);
 
 function renderDailyBtn() {
   const day = dailyNumber(), d = todaysDaily(), b = $("dailybtn");
@@ -1446,6 +1471,7 @@ function renderDailyBtn() {
     : d ? `<span>Your clock is running!</span><small>Tap to carry on</small>`
     : `<span>Same board for everyone</span><small>Fewest moves wins · new every day</small>`) + `</div>`;
 }
+$("pastbtn").onclick = () => showPast();
 $("dailybtn").onclick = () => todaysDaily() && todaysDaily().moves ? showDailyBoard() : showDailyIntro();
 
 function showDailyIntro() {
@@ -1483,7 +1509,7 @@ async function startDaily(join, typed) {
   persist();
   if (d.result) return showDailyBoard();
   closeCard();
-  winSeq++; quitIfPlaying();
+  winSeq++; quitIfPlaying(); past = null;
   daily = { day: d.day, startedAt: d.started_at, offset: d.now - Date.now(), par: d.par, joined: d.joined };
   li = -1;
   cur = { grid: d.grid, name: "Daily puzzle", hint: "Same board for everyone today" };
@@ -1517,7 +1543,7 @@ async function winDaily() {
     }
     const b = r.data;
     dd.finalMs = b.you ? b.you.ms : b.mine.ms; tickClock();
-    save.daily = { day: dd.day, joined: dd.joined, moves: b.you ? b.you.moves : b.mine.moves, ms: dd.finalMs,
+    save.daily = { day: dd.day, joined: dd.joined, par: dd.par, moves: b.you ? b.you.moves : b.mine.moves, ms: dd.finalMs,
       rank: b.you ? b.you.rank : 0, total: b.total };
     persist();
     track("daily_complete", { day: dd.day, moves: save.daily.moves, par: dd.par, seconds: Math.round(dd.finalMs / 1000), rank: save.daily.rank });
@@ -1526,10 +1552,10 @@ async function winDaily() {
   setTimeout(send, 650);
 }
 
-function boardHTML(b) {
+function boardHTML(b, when = "TODAY'S") {
   if (!b.total) return `<p style="margin-top:12px">No finishers yet. Be the first!</p>`;
   const me = b.you;
-  return `<div class="lbhead"><span>TODAY'S TOP ${Math.min(b.total, 20)}${b.total > 20 ? ` OF ${b.total}` : ""}</span><span>MOVES · TIME</span></div>
+  return `<div class="lbhead"><span>${when} TOP ${Math.min(b.total, 20)}${b.total > 20 ? ` OF ${b.total}` : ""}</span><span>MOVES · TIME</span></div>
     <ol class="lb">${b.top.map(r => `<li class="${me && r.rank === me.rank && r.nick === me.nick ? "me" : ""}">
       <span class="rk">${r.rank}</span><span class="nk">${esc(r.nick)}</span><span class="sc">${r.moves} · ${fmtTime(r.ms)}</span></li>`).join("")}
     ${me && me.rank > 20 ? `<li class="me"><span class="rk">${me.rank}</span><span class="nk">${esc(me.nick)}</span>
@@ -1635,6 +1661,134 @@ function makeDailyShareFile(d, par, total) {
   });
 }
 
+// ------------------------------------------------------------ past dailies
+// Earlier daily puzzles, from the server's /past (only days that are over).
+// Just for fun: no leaderboard, but one try each, saved after every move
+// (save.past[day] = {grid, par, route, ms, done, moves}). A daily finished on
+// its own day is archived here with its official result (official: true).
+const dayLabel = day => new Date(DAILY_EPOCH + (day - 1) * 864e5)
+  .toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric", timeZone: "UTC" });
+if (!save.past) save.past = {};
+function archiveDaily() { // when a new day starts, yesterday's finished daily moves into the archive
+  const d = save.daily;
+  if (!d || d.day >= dailyNumber()) return;
+  if (d.moves && !(save.past[d.day] && save.past[d.day].done))
+    save.past[d.day] = { ...(save.past[d.day] || {}), done: true, official: true, moves: d.moves, ms: d.ms, rank: d.rank, total: d.total, par: d.par };
+  delete save.daily;
+  persist();
+}
+const pastElapsed = () => !past ? 0 : past.finalMs != null ? past.finalMs : past.prevMs + Date.now() - past.openedAt;
+function savePast() {
+  if (!past || done) return;
+  const p = save.past[past.day];
+  p.route = moveDirs.join(""); p.ms = pastElapsed();
+  persist();
+}
+
+function showPast() {
+  archiveDaily();
+  track("archive_view");
+  const today = dailyNumber(), rows = [];
+  for (let day = today - 1; day >= 1; day--) {
+    const p = save.past[day] || {};
+    const go = p.done ? `<button class="pastgo result" data-day="${day}" data-kind="result">${p.moves} moves ✓</button>`
+      : p.route ? `<button class="pastgo resume" data-day="${day}" data-kind="resume">Resume</button>`
+      : `<button class="pastgo play" data-day="${day}" data-kind="play">Play</button>`;
+    rows.push(`<div class="pastrow"><div class="pastday"><b>#${day}</b>${dayLabel(day)}</div>${go}
+      <button class="pastlb" data-day="${day}" aria-label="Leaderboard for daily #${day}">🏆</button></div>`);
+  }
+  openCard(`<div class="kicker">PAST PUZZLES</div><h2>Earlier dailies</h2>
+    <p>One try each, just for fun: past puzzles don't go on the leaderboard.</p>
+    <div class="pastlist">${rows.join("") || "<p>No past puzzles yet.</p>"}</div>
+    <div class="shared bad" id="pastNote"></div>
+    <div class="row"><button class="go" id="cardOk">Done</button></div>`);
+  $("cardOk").onclick = () => { closeCard(); showHome(); };
+  $("card").querySelectorAll(".pastgo").forEach(b => b.onclick = () => {
+    const day = +b.dataset.day;
+    track("archive_open", { puzzle: day, kind: b.dataset.kind });
+    b.dataset.kind === "result" ? pastResultCard(day) : startPast(day, b);
+  });
+  $("card").querySelectorAll(".pastlb").forEach(b => b.onclick = () => showPastBoard(+b.dataset.day));
+}
+
+async function startPast(day, btn) {
+  let p = save.past[day] || {};
+  if (!p.grid) {
+    btn.disabled = true; btn.textContent = "…";
+    const r = await api(`/past?day=${day}`);
+    if (!r.ok) { btn.disabled = false; btn.textContent = "Play"; $("pastNote").textContent = r.error; return; }
+    p = save.past[day] = { ...p, grid: r.data.grid, par: r.data.par };
+    persist();
+  }
+  closeCard();
+  winSeq++; quitIfPlaying(); daily = null;
+  past = { day, par: p.par, prevMs: p.ms || 0, openedAt: Date.now() };
+  li = -1;
+  cur = { grid: p.grid, name: "Past daily puzzle", hint: dayLabel(day) };
+  openBoard(`PAST DAILY #${day}`, p.par);
+  for (const d of p.route || "") { // pick up where they left off
+    const res = step(lv, st, d);
+    if (!res || res.fall || res.won) break;
+    hist.push(st); moveDirs.push(d); st = res.st;
+  }
+  paint(); placeToken(); updateCounter(); tickClock();
+  playing = true;
+}
+
+function winPast() {
+  done = true; playing = false;
+  const seq = ++winSeq, pp = past, p = save.past[pp.day];
+  pp.finalMs = pp.prevMs + Date.now() - pp.openedAt; tickClock();
+  Object.assign(p, { done: true, moves: hist.length, ms: pp.finalMs, route: moveDirs.join("") });
+  persist();
+  track("archive_complete", { puzzle: pp.day, moves: p.moves, par: pp.par, seconds: Math.round(p.ms / 1000) });
+  setTimeout(() => {
+    if (seq !== winSeq) return;
+    const [x, y] = px(st.r, st.c);
+    token.animate([{ transform: tokT(x, y, TH) }, { transform: tokT(x, y, TH + cs * .7, 1.1) }, { transform: tokT(x, y, TH) }],
+      { duration: 380, easing: "ease-out" });
+  }, 260);
+  setTimeout(() => {
+    if (seq !== winSeq || past !== pp) return;
+    SFX.win(); buzz([30, 40, 30]);
+    pastResultCard(pp.day);
+  }, 750);
+}
+
+// A finished past daily, read-only: no retry, so there's one try per puzzle
+function pastResultCard(day) {
+  const p = save.past[day], par = p.par;
+  openCard(`<div class="kicker">${dayLabel(day).toUpperCase()}${p.official ? " · PLAYED ON THE DAY" : ""}</div>
+    <h2>Past daily #${day} done!</h2>
+    ${p.ms ? `<div class="bigtime">⏱ ${fmtTime(p.ms)}</div>` : ""}
+    <p><b style="color:var(--text)">${p.moves} moves</b>${par ? ` · par ${par}${p.moves === par ? " · perfect route!" : ""}` : ""}</p>
+    ${p.official && p.rank ? `<p style="margin-top:4px">You were <b style="color:var(--gold)">#${p.rank}</b> of ${p.total} on the day.</p>` : ""}
+    <div class="row"><button class="alt" id="cardShare">Share</button><button class="alt" id="cardPast">Past puzzles</button>
+      <button class="go" id="cardDone">Done</button></div>
+    <div class="shared" id="cardShared"></div>`);
+  let shareFile = null;
+  makeDailyShareFile({ day, moves: p.moves, ms: p.ms, rank: p.official ? p.rank : 0, total: p.total }, par, p.total)
+    .then(f => { shareFile = f; });
+  const text = `Bumpuzzled 🧩 Daily #${day} (${dayLabel(day)})\n${p.moves} moves${par ? ` (par ${par})` : ""}` +
+    (p.ms ? ` · ⏱ ${fmtTime(p.ms)}` : "") + `\nCan you beat it? ${SHARE_URL}`;
+  $("cardShare").onclick = () => shareResult(text, shareFile, { daily: day, archive: true });
+  const leave = () => { past = null; showHome(); };
+  $("cardPast").onclick = () => { leave(); showPast(); };
+  $("cardDone").onclick = () => { closeCard(); leave(); };
+}
+
+async function showPastBoard(day) {
+  openCard(`<div class="kicker">DAILY #${day} · ${dayLabel(day).toUpperCase()}</div><p>Loading…</p>`);
+  track("daily_board", { day });
+  const r = await api(`/board?day=${day}&device=${deviceId()}`);
+  if (!$("card").textContent.includes(`DAILY #${day} ·`)) return;
+  openCard(`<div class="kicker">DAILY #${day} · ${dayLabel(day).toUpperCase()}</div><h2>Leaderboard on the day</h2>
+    ${!r.ok ? `<p>${esc(r.error)}</p>` : r.data.total ? boardHTML(r.data, "THE DAY'S")
+      : `<p style="margin-top:10px">No results for this day. Leaderboards are kept for 30 days.</p>`}
+    <div class="row"><button class="go" id="cardBack">Back</button></div>`);
+  $("cardBack").onclick = showPast;
+}
+
 // ------------------------------------------------------------ input
 $("bU").onclick = () => move("U");
 $("bD").onclick = () => move("D");
@@ -1642,7 +1796,7 @@ $("bL").onclick = () => move("L");
 $("bR").onclick = () => move("R");
 $("undobtn").onclick = undo;
 $("resetbtn").onclick = restart;
-$("backbtn").onclick = () => { winSeq++; quitIfPlaying(); daily = null; closeCard(); showHome(); };
+$("backbtn").onclick = () => { winSeq++; quitIfPlaying(); savePast(); daily = null; past = null; closeCard(); showHome(); };
 $("helpbtn").onclick = showLegend;
 
 addEventListener("keydown", e => {
