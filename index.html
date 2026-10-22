@@ -290,6 +290,10 @@ button { font: inherit; color: inherit; border: none; background: none; cursor: 
 .pastgo.play { background: var(--gold); color: #3a2600; }
 .pastgo.resume { border: 1px solid var(--gold); color: var(--gold); }
 .pastgo.result { background: rgba(95,224,143,.12); border: 1px solid rgba(95,224,143,.35); color: var(--exit); }
+.namefield textarea { font: inherit; font-size: .95rem; color: var(--text); background: var(--panel); border: 1px solid var(--line);
+  border-radius: 10px; padding: 10px 12px; resize: none; user-select: text; -webkit-user-select: text; }
+.card .fine { margin-top: 10px; font-size: .75rem; color: var(--faint); }
+.card .fine a { color: var(--dim); }
 .pastrow .pastlb { width: 40px; height: 40px; flex: none; border-radius: 10px; font-size: 1.05rem;
   background: rgba(255,255,255,.04); border: 1px solid var(--line); }
 @media (max-width: 360px) { /* narrow phones: room for the past-puzzle rows */
@@ -315,6 +319,7 @@ button { font: inherit; color: inherit; border: none; background: none; cursor: 
   </div>
   <div class="links">
     <button class="linkbtn" id="privacybtn">Privacy</button>
+    <button class="linkbtn" id="feedbackbtn">Feedback</button>
     <button class="linkbtn" id="contactbtn">Contact</button>
   </div>
   <div class="small">Works offline · progress saved on this device</div>
@@ -615,6 +620,7 @@ function showPrivacy() {
       <p>It records game events (level number, moves, stars, daily results, shares, installs, style picks) plus standard details like device type and country. No names, emails or accounts, and the game uses no cookies.</p>
       <p>The daily puzzle's leaderboard is optional. If you join, the game sends your nickname, your moves and time, and a random code made by the game on your device (so you appear once a day) to our leaderboard, which runs on Cloudflare. It keeps only those, with the puzzle number, for 30 days. You can remove yourself from the leaderboard screen at any time.</p>
       <p>Your progress is saved only on this device.</p>
+      <p>The feedback form sends your message, your email if you give one, and what you were playing (a level or daily number) to us through Formspree (<a href="https://formspree.io/legal/privacy-policy/" target="_blank" rel="noopener" style="color:var(--gold)">their privacy policy</a>). We use it only to read and reply.</p>
       <p>Analytics is currently <b style="color:var(--text)">${on ? "on" : "off"}</b>.</p>
       <p>Questions or feedback? <a href="mailto:bumpuzzledgame@gmail.com?subject=Bumpuzzled" style="color:var(--gold)">bumpuzzledgame@gmail.com</a></p>
     </div>
@@ -640,7 +646,9 @@ function showContact() {
       <a class="go" id="mailEmail" href="mailto:${CONTACT_EMAIL}?subject=Bumpuzzled" style="text-decoration:none">Open email app</a>
     </div>
     <div class="shared" id="contactNote"></div>
-    <div class="row" style="margin-top:8px"><button class="alt" id="cardOk">Close</button></div>`);
+    <div class="row" style="margin-top:8px"><button class="alt" id="cardFeedback">💬 Send feedback here</button>
+      <button class="alt" id="cardOk">Close</button></div>`);
+  $("cardFeedback").onclick = showFeedback;
   $("mailEmail").onclick = () => track("contact_email", { method: "mail_app" });
   $("copyEmail").onclick = async () => {
     try { await navigator.clipboard.writeText(CONTACT_EMAIL); $("contactNote").textContent = "Copied! Paste it into any email app."; }
@@ -650,6 +658,53 @@ function showContact() {
   $("cardOk").onclick = closeCard;
 }
 $("contactbtn").onclick = showContact;
+// Feedback form: posts to the owner's Formspree form (shared with Kablamagram).
+// No account or cookie; the Privacy card says what is sent.
+const FEEDBACK_URL = "https://formspree.io/f/xaqglnpa";
+const playingNow = () => daily ? `daily #${daily.day}` : past ? `past daily #${past.day}`
+  : $("game").classList.contains("on") ? `level ${li + 1}`
+  : `home screen · ${Object.keys(save.stars).length} of ${LEVELS.length} levels cleared · ${totalStars()} stars`;
+function showFeedback() {
+  const playing = playingNow();
+  track("feedback_open");
+  openCard(`<div class="kicker">FEEDBACK</div><h2>Tell us what you think</h2>
+    <p>Ideas, bugs, a level you loved or one that drove you mad? We read everything.</p>
+    <label class="namefield">Your message
+      <textarea id="fbMsg" rows="5" maxlength="2000" placeholder="Type here…"></textarea></label>
+    <label class="namefield">Your email (only if you'd like a reply)
+      <input id="fbEmail" type="email" maxlength="200" autocomplete="email" placeholder="you@example.com"></label>
+    <div class="shared" id="fbNote"></div>
+    <div class="row"><button class="alt" id="fbCancel">Cancel</button><button class="go" id="fbSend">Send</button></div>
+    <p class="fine">Sent to us through Formspree. See <a href="#" id="fbPrivacy">Privacy</a>.</p>`);
+  const note = (t, bad) => { $("fbNote").textContent = t; $("fbNote").classList.toggle("bad", !!bad); };
+  $("fbCancel").onclick = closeCard;
+  $("fbPrivacy").onclick = e => { e.preventDefault(); showPrivacy(); };
+  $("fbSend").onclick = async () => {
+    const message = $("fbMsg").value.trim(), email = $("fbEmail").value.trim();
+    if (message.length < 3) return note("Please write a message first.", true);
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return note("That email doesn't look right. Leave it empty if you don't need a reply.", true);
+    const btn = $("fbSend");
+    btn.disabled = true; note("Sending…");
+    const body = { _subject: "Bumpuzzled feedback", game: "Bumpuzzled", message, playing };
+    if (email) body.email = email;
+    let ok = false;
+    try {
+      const r = await fetch(FEEDBACK_URL, { method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify(body) });
+      ok = r.ok;
+    } catch (e) {}
+    if (!$("fbSend")) return; // the card was closed meanwhile
+    btn.disabled = false;
+    if (ok) {
+      $("fbMsg").value = ""; $("fbEmail").value = "";
+      note("Thanks! Your message was sent.");
+      track("feedback_sent");
+    } else note(`Sorry, that didn't send. You can email us at ${CONTACT_EMAIL} instead.`, true);
+  };
+  setTimeout(() => $("fbMsg") && $("fbMsg").focus(), 50);
+}
+$("feedbackbtn").onclick = showFeedback;
+
 $("moregames").onclick = () => track("more_games", { to: "kablamagram" });
 
 function starsFor(moves, par) {
@@ -1800,6 +1855,8 @@ $("backbtn").onclick = () => { winSeq++; quitIfPlaying(); savePast(); daily = nu
 $("helpbtn").onclick = showLegend;
 
 addEventListener("keydown", e => {
+  if (e.key === "Escape" && $("fbMsg")) { closeCard(); return; }
+  if (e.target.closest && e.target.closest("input, textarea")) return; // Enter = new line, letters = typing
   if (!$("game").classList.contains("on")) return;
   const k = { ArrowUp: "U", ArrowDown: "D", ArrowLeft: "L", ArrowRight: "R", w: "U", s: "D", a: "L", d: "R" }[e.key];
   if ($("veil").classList.contains("on")) {
